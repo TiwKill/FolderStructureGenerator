@@ -3,7 +3,7 @@ import FolderStructureBuilder from '@/components/folder-structure'
 
 export default function Home(): React.JSX.Element {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 pt-16">
       <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">

@@ -19,6 +19,7 @@ import {
 import FileFolder from './folder-structure/file-folder'
 import { formatStructureForDisplay, formatTreeStructure, deepCloneItem } from './folder-structure/utils'
 import ProfileCard from './folder-structure/profile-card'
+import { ModeToggle } from './mode-toggle'
 
 interface FileFolderItem {
     id: string;
@@ -625,6 +626,7 @@ const FolderStructureBuilder: React.FC = () => {
                                 <ProfileCard />
                             </div>
                             <div className='flex gap-2 items-center'>
+                                <ModeToggle />
                                 <Button
                                     variant="ghost"
                                     size="sm"
