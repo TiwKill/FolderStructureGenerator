@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus, Folder } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
+import { PageSkeleton } from "@/components/folder-structure/skeleton-loader"
 
 interface TabStructure {
     id: string
@@ -120,13 +121,7 @@ export default function Home(): React.JSX.Element {
     // Don't render until data is loaded
     if (!isLoaded) {
         return (
-            <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 pt-16">
-                <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-center h-64">
-                        <div className="text-lg text-gray-600 dark:text-gray-400">Loading...</div>
-                    </div>
-                </div>
-            </main>
+            <PageSkeleton />
         )
     }
 
