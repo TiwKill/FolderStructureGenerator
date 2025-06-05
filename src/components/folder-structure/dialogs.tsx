@@ -71,7 +71,6 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
         { key: "Ctrl/Cmd + V", action: "Paste items (in folder)" },
         { key: "Ctrl/Cmd + A", action: "Select all items" },
         { key: "Delete", action: "Delete selected items" },
-        { key: "F2", action: "Rename selected item" },
         { key: "Double Click", action: "Rename item" },
         { key: "Ctrl/Cmd + Click", action: "Multi-select items" },
         { key: "Shift + Click", action: "Range select items" },
