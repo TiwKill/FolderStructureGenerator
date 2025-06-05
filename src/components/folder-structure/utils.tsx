@@ -1,13 +1,13 @@
-import { FILE_ICONS } from './constants'
-import { File } from 'lucide-react'
-import { FileFolderItem, FileIcon } from '@/types/interfaces'
+import { FILE_ICONS } from "./constants"
+import { File } from "lucide-react"
+import type { FileItem, FileIcon, FileFolderItem } from "@/types/interfaces"
 
 export const formatFileSize = (bytes: number): string => {
-    if (!bytes) return '0 B'
+    if (!bytes) return "0 B"
     const k = 1024
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+    const sizes = ["B", "KB", "MB", "GB", "TB"]
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+    return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
 export const getFileIcon = (filename: string): FileIcon => {
@@ -15,40 +15,124 @@ export const getFileIcon = (filename: string): FileIcon => {
     if (FILE_ICONS[filename.toLowerCase()]) {
         return FILE_ICONS[filename.toLowerCase()]
     }
-    
+
     // Then check for extensions
-    const extension = filename.split('.').pop()?.toLowerCase()
-    return extension && FILE_ICONS[extension] ? FILE_ICONS[extension] : { icon: File, color: 'text-gray-500' }
+    const extension = filename.split(".").pop()?.toLowerCase()
+    return extension && FILE_ICONS[extension] ? FILE_ICONS[extension] : { icon: File, color: "text-gray-500" }
 }
 
-export const formatTreeStructure = (structure: FileFolderItem, isLast: boolean = true, prefix: string = ''): string => {
-    let output = ''
-    
-    // Add root folder name with trailing slash
-    if (prefix === '') {
-        output = `${structure.name}/\n`
-    } else {
-        // For nested items, add the appropriate prefix and name
-        output = `${prefix}${isLast ? '└─ ' : '├─ '}${structure.name}${structure.type === 'folder' ? '/' : ''}\n`
+export const createDefaultStructure = (): FileItem => {
+    return {
+        id: "root",
+        name: "project",
+        type: "folder",
+        children: [
+            {
+                id: "src",
+                name: "src",
+                type: "folder",
+                children: [
+                    {
+                        id: "components",
+                        name: "components",
+                        type: "folder",
+                        children: [],
+                    },
+                    {
+                        id: "pages",
+                        name: "pages",
+                        type: "folder",
+                        children: [],
+                    },
+                    {
+                        id: "utils",
+                        name: "utils",
+                        type: "folder",
+                        children: [],
+                    },
+                ],
+            },
+            {
+                id: "package-json",
+                name: "package.json",
+                type: "file",
+            },
+            {
+                id: "readme",
+                name: "README.md",
+                type: "file",
+            },
+        ],
     }
-    
-    if (structure.children && structure.children.length > 0) {
-        // Sort children: folders first, then files, both alphabetically
-        const sortedChildren = [...structure.children].sort((a, b) => {
-            if (a.type !== b.type) {
-                return a.type === 'folder' ? -1 : 1
-            }
-            return a.name.localeCompare(b.name)
-        })
+}
 
-        sortedChildren.forEach((child, index) => {
-            const isLastChild = index === sortedChildren.length - 1
-            const newPrefix = prefix + (isLast ? '   ' : '│  ')
-            output += formatTreeStructure(child, isLastChild, newPrefix)
-        })
+export const generateStructureDisplay = (structure: FileItem, prefix = "", isLast = true): string => {
+    let result = ""
+
+    if (structure.id === "root") {
+        result += `${structure.name}/\n`
+        if (structure.children) {
+            structure.children.forEach((child, index) => {
+                const isLastChild = index === structure.children!.length - 1
+                result += generateStructureDisplay(child, "", isLastChild)
+            })
+        }
+    } else {
+        const connector = isLast ? "└── " : "├── "
+        const icon = structure.type === "folder" ? "📁 " : "📄 "
+        result += `${prefix}${connector}${icon}${structure.name}\n`
+
+        if (structure.children && structure.children.length > 0) {
+            const newPrefix = prefix + (isLast ? "    " : "│   ")
+            structure.children.forEach((child, index) => {
+                const isLastChild = index === structure.children!.length - 1
+                result += generateStructureDisplay(child, newPrefix, isLastChild)
+            })
+        }
     }
-    
-    return output
+
+    return result
+}
+
+export const exportStructure = (structure: FileItem, format: "json" | "text") => {
+    let content: string
+    let filename: string
+    let mimeType: string
+
+    if (format === "json") {
+        content = JSON.stringify(structure, null, 2)
+        filename = "project-structure.json"
+        mimeType = "application/json"
+    } else {
+        content = generateStructureDisplay(structure)
+        filename = "project-structure.txt"
+        mimeType = "text/plain"
+    }
+
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+}
+
+export const importStructure = (content: string): FileItem => {
+    try {
+        const parsed = JSON.parse(content)
+
+        // Validate the structure
+        if (!parsed.id || !parsed.name || !parsed.type) {
+            throw new Error("Invalid structure format")
+        }
+
+        return parsed as FileItem
+    } catch (error) {
+        throw new Error("Failed to parse imported structure")
+    }
 }
 
 export const formatStructureForDisplay = (structure: FileFolderItem, level: number = 0): string => {
@@ -77,3 +161,7 @@ export const deepCloneItem = (item: FileFolderItem): FileFolderItem => {
     clone.id = `${clone.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     return clone
 } 
+
+export const formatTreeStructure = (structure: FileItem): string => {
+    return generateStructureDisplay(structure)
+}

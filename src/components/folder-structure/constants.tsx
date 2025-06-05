@@ -9,14 +9,9 @@ import {
     Settings,
     Database,
     Archive,
-    LucideIcon
 } from "lucide-react"
 import { FileFolderItem } from '@/types/interfaces'
-
-interface FileIcon {
-    icon: LucideIcon;
-    color: string;
-}
+import { FileIcon } from '@/types/interfaces'
 
 export const INITIAL_STRUCTURE: FileFolderItem = {
     id: 'root',

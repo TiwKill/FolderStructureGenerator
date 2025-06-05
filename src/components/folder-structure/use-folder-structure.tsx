@@ -6,7 +6,22 @@ import { FileFolderItem } from '@/types/interfaces'
 import { INITIAL_STRUCTURE } from './constants'
 import { formatStructureForDisplay, formatTreeStructure, deepCloneItem } from './utils'
 
+const STORAGE_KEY_PREFIX = "project-structure-data-"
+
 export const useFolderStructure = () => {
+    const [selectedItems, setSelectedItems] = useState<string[]>([])
+    const [lastSelectedItem, setLastSelectedItem] = useState<string | null>(null)
+    const [clipboard, setClipboard] = useState<FileFolderItem | null>(null)
+    const [clipboardType, setClipboardType] = useState<'copy' | 'cut' | null>(null)
+    const [currentEditingId, setCurrentEditingId] = useState<string | null>(null)
+    const [structureDisplay, setStructureDisplay] = useState<string>('')
+    const [showClearDialog, setShowClearDialog] = useState<boolean>(false)
+    const [showExportDialog, setShowExportDialog] = useState<boolean>(false)
+    const [currentExportItem, setCurrentExportItem] = useState<FileFolderItem | null>(null)
+    const [showShortcutsDialog, setShowShortcutsDialog] = useState<boolean>(false)
+    const [draggedItem, setDraggedItem] = useState<FileFolderItem | null>(null)
+    const [draggedItemParentId, setDraggedItemParentId] = useState<string | null>(null)
+
     const [structure, setStructure] = useState<FileFolderItem>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('folderStructure')
@@ -49,19 +64,6 @@ export const useFolderStructure = () => {
         }
         return []
     })
-
-    const [selectedItems, setSelectedItems] = useState<string[]>([])
-    const [lastSelectedItem, setLastSelectedItem] = useState<string | null>(null)
-    const [clipboard, setClipboard] = useState<FileFolderItem | null>(null)
-    const [clipboardType, setClipboardType] = useState<'copy' | 'cut' | null>(null)
-    const [currentEditingId, setCurrentEditingId] = useState<string | null>(null)
-    const [structureDisplay, setStructureDisplay] = useState<string>('')
-    const [showClearDialog, setShowClearDialog] = useState<boolean>(false)
-    const [showExportDialog, setShowExportDialog] = useState<boolean>(false)
-    const [currentExportItem, setCurrentExportItem] = useState<FileFolderItem | null>(null)
-    const [showShortcutsDialog, setShowShortcutsDialog] = useState<boolean>(false)
-    const [draggedItem, setDraggedItem] = useState<FileFolderItem | null>(null)
-    const [draggedItemParentId, setDraggedItemParentId] = useState<string | null>(null)
 
     // Find Item
     const findItem = useCallback(

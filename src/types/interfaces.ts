@@ -13,7 +13,7 @@ export interface DialogProps {
     onOpenChange: (open: boolean) => void;
     onClear?: () => void;
     onExport?: (format: 'tree' | 'json') => void;
-} 
+}
 
 export interface FrameworkStructureProps {
     onFrameworkSelect: (structure: any) => void;
@@ -25,4 +25,16 @@ export interface FrameworkStructureProps {
 export interface FileIcon {
     icon: LucideIcon;
     color: string;
+}
+
+export interface FileItem {
+    id: string
+    name: string
+    type: "file" | "folder"
+    children?: FileItem[]
+}
+
+export interface ClipboardItem {
+    item: FileItem
+    operation: "copy" | "cut"
 }
