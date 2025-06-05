@@ -23,7 +23,7 @@ export const getFileIcon = (filename: string): FileIcon => {
     
     // Then check for extensions
     const extension = filename.split('.').pop()?.toLowerCase()
-    return FILE_ICONS[extension] || { icon: File, color: 'text-gray-500' }
+    return extension && FILE_ICONS[extension] ? FILE_ICONS[extension] : { icon: File, color: 'text-gray-500' }
 }
 
 export const formatTreeStructure = (structure: FileFolderItem, isLast: boolean = true, prefix: string = ''): string => {
