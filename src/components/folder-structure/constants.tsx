@@ -1,5 +1,4 @@
 import { 
-    File,
     Image,
     FileText,
     FileCode,

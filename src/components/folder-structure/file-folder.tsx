@@ -1,16 +1,11 @@
+// src/components/folder-structure/file-folder.tsx
+
 import React, { useState, useRef, useEffect } from 'react'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
 import { Folder, FolderOpen, Plus, Pencil, Trash2, Copy, Scissors, ClipboardPaste, Download, Upload } from "lucide-react"
 import { getFileIcon, formatFileSize } from './utils'
-
-interface FileFolderItem {
-    id: string;
-    name: string;
-    type: 'file' | 'folder';
-    children?: FileFolderItem[];
-    size?: number;
-}
+import { FileFolderItem } from '@/types/folder-structure'
 
 interface FileFolderProps {
     item: FileFolderItem;
@@ -179,6 +174,23 @@ const FileFolder: React.FC<FileFolderProps> = ({
 
     return (
         <div className="relative group rounded-lg">
+            {/* Drop zone above the item */}
+            <div
+                className="h-1 -my-1"
+                onDragOver={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (parentId !== null) { // Only show for non-root items
+                        e.dataTransfer.dropEffect = 'move'
+                    }
+                }}
+                onDrop={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onDrop(e, item, index, parentId)
+                }}
+            />
+
             <ContextMenu>
                 <ContextMenuTrigger>
                     <div 
@@ -256,7 +268,6 @@ const FileFolder: React.FC<FileFolderProps> = ({
                         {showInfo && !isEditing && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate">
                                 {currentPath}
-                                {item.size && ` • ${formatFileSize(item.size)}`}
                             </span>
                         )}
                     </div>
@@ -323,33 +334,34 @@ const FileFolder: React.FC<FileFolderProps> = ({
             {item.type === 'folder' && item.children && isOpen && (
                 <div className="ml-4 pl-4 border-l border-gray-200 dark:border-gray-700">
                     {item.children.map((child, childIndex) => (
-                        <FileFolder
-                            key={child.id}
-                            item={child}
-                            onAdd={onAdd}
-                            onDelete={onDelete}
-                            onRename={onRename}
-                            selectedItems={selectedItems}
-                            onSelect={onSelect}
-                            isSelected={selectedItems.includes(child.id)}
-                            onCopy={onCopy}
-                            onPaste={onPaste}
-                            onCut={onCut}
-                            clipboard={clipboard}
-                            currentEditingId={currentEditingId}
-                            setCurrentEditingId={setCurrentEditingId}
-                            onExport={onExport}
-                            onImport={onImport}
-                            path={currentPath}
-                            onError={onError}
-                            openFolders={openFolders}
-                            setOpenFolders={setOpenFolders}
-                            onDragStart={onDragStart}
-                            onDragOver={onDragOver}
-                            onDrop={onDrop}
-                            index={childIndex}
-                            parentId={item.id}
-                        />
+                        <React.Fragment key={child.id}>
+                            <FileFolder
+                                item={child}
+                                onAdd={onAdd}
+                                onDelete={onDelete}
+                                onRename={onRename}
+                                selectedItems={selectedItems}
+                                onSelect={onSelect}
+                                isSelected={selectedItems.includes(child.id)}
+                                onCopy={onCopy}
+                                onPaste={onPaste}
+                                onCut={onCut}
+                                clipboard={clipboard}
+                                currentEditingId={currentEditingId}
+                                setCurrentEditingId={setCurrentEditingId}
+                                onExport={onExport}
+                                onImport={onImport}
+                                path={currentPath}
+                                onError={onError}
+                                openFolders={openFolders}
+                                setOpenFolders={setOpenFolders}
+                                onDragStart={onDragStart}
+                                onDragOver={onDragOver}
+                                onDrop={onDrop}
+                                index={childIndex}
+                                parentId={item.id}
+                            />
+                        </React.Fragment>
                     ))}
                 </div>
             )}
@@ -357,4 +369,4 @@ const FileFolder: React.FC<FileFolderProps> = ({
     )
 }
 
-export default FileFolder 
+export default FileFolder
