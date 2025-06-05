@@ -1,5 +1,3 @@
-// src/components/folder-structure/file-folder.tsx
-
 import React, { useState, useRef, useEffect } from 'react'
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
