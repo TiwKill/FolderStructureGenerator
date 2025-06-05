@@ -1,0 +1,51 @@
+{
+  "id": "root",
+  "name": "Project",
+  "type": "folder",
+  "children": [
+    {
+      "id": "7dabfc60-4f48-40f7-9247-b5e30d74817c",
+      "name": "public",
+      "type": "folder",
+      "children": []
+    },
+    {
+      "id": "6b7c7be5-9a4d-458f-8d42-cf5f7a6e5904",
+      "name": "src",
+      "type": "folder",
+      "children": [
+        {
+          "id": "abf4b353-e2b1-40c3-8c88-d85e287f454a",
+          "name": "app",
+          "type": "folder",
+          "children": [
+            {
+              "id": "1f385f37-1485-4b40-a6f6-2fbb50d9cbb2",
+              "name": "page.tsx",
+              "type": "file",
+              "size": 0
+            },
+            {
+              "id": "dd8dde74-d6d8-4367-ad8a-754a2aba3bae",
+              "name": "layout.tsx",
+              "type": "file",
+              "size": 0
+            },
+            {
+              "id": "95655223-94f6-4999-871a-b226bc8447fa",
+              "name": "globals.css",
+              "type": "file",
+              "size": 0
+            },
+            {
+              "id": "79c33c48-7052-448f-ab56-d76bf0ae9f26",
+              "name": "favicon.ico",
+              "type": "file",
+              "size": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
