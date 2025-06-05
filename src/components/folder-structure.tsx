@@ -529,14 +529,13 @@ const FolderStructureBuilder: React.FC = () => {
 
         // Allow dropping into folders or between items in the same folder
         const isSameFolder = parentId === draggedItemParentId
-        const isRootDrop = item.id === 'root'
         
-        if (!isSameFolder && !isRootDrop && item.type !== 'folder') {
+        // Allow dropping if it's a folder or if we're reordering in the same folder
+        if (item.type === 'folder' || isSameFolder) {
+            e.dataTransfer.dropEffect = 'move'
+        } else {
             e.dataTransfer.dropEffect = 'none'
-            return
         }
-        
-        e.dataTransfer.dropEffect = 'move'
     }
 
     // Drop
@@ -546,7 +545,6 @@ const FolderStructureBuilder: React.FC = () => {
         
         if (!draggedItem || draggedItemParentId === null) return
 
-        const isRootDrop = targetItem.id === 'root'
         const isSameFolder = targetParentId === draggedItemParentId
 
         // Validate drop target
@@ -555,16 +553,16 @@ const FolderStructureBuilder: React.FC = () => {
             return
         }
 
+        // Check if we're moving between folders
         if (!isSameFolder) {
-            // For moves between folders, target must be a folder
-            if (targetItem.type !== 'folder' && !isRootDrop) {
+            // Target must be a folder for moving between folders
+            if (targetItem.type !== 'folder') {
                 toast.error('Can only drop items into folders')
                 return
             }
 
             // Check for duplicate names in the target folder
-            const targetFolderId = isRootDrop ? 'root' : targetItem.id
-            if (checkDuplicateName(targetFolderId, draggedItem.name)) {
+            if (checkDuplicateName(targetItem.id, draggedItem.name)) {
                 toast.error('An item with this name already exists in the target folder')
                 return
             }
@@ -589,27 +587,13 @@ const FolderStructureBuilder: React.FC = () => {
             }
 
             // Handle removal from original location
-            if (draggedItemParentId === 'root') {
-                removeFromParent(newStructure.children || [])
-            } else {
-                const originalParent = findItem(draggedItemParentId, [newStructure])
-                if (originalParent?.children) {
-                    removeFromParent(originalParent.children)
-                }
+            const originalParent = findItem(draggedItemParentId, [newStructure])
+            if (originalParent?.children) {
+                removeFromParent(originalParent.children)
             }
 
             // Handle insertion at new location
-            if (isRootDrop) {
-                // Add to root children
-                if (!newStructure.children) {
-                    newStructure.children = []
-                }
-                if (targetIndex >= 0 && targetIndex <= newStructure.children.length) {
-                    newStructure.children.splice(targetIndex, 0, draggedItem)
-                } else {
-                    newStructure.children.push(draggedItem)
-                }
-            } else if (isSameFolder) {
+            if (isSameFolder) {
                 // Reordering within the same folder
                 const parent = findItem(targetParentId || 'root', [newStructure])
                 if (parent?.children) {
