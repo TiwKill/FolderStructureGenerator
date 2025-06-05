@@ -17,6 +17,7 @@ A modern, interactive web application for creating and visualizing project folde
 - 🔄 Real-time structure preview
 - 🎁 Framework-specific templates
 - 🔧 Automatic project scaffolding
+- 📱 Responsive design with horizontal scrolling tabs
 
 ## 🎁 Supported Frameworks
 

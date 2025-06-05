@@ -1,42 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu"
+"use client"
+
+import React, { useState, useRef, useEffect } from "react"
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import { Input } from "@/components/ui/input"
-import { Folder, FolderOpen, Plus, Pencil, Trash2, Copy, Scissors, ClipboardPaste, Download, Upload } from "lucide-react"
-import { getFileIcon } from './utils'
-import { FileFolderItem } from '@/types/interfaces'
+import {
+    Folder,
+    FolderOpen,
+    Plus,
+    Pencil,
+    Trash2,
+    Copy,
+    Scissors,
+    ClipboardPaste,
+    Download,
+    Upload,
+} from "lucide-react"
+import { getFileIcon } from "./utils"
+import type { FileItem, ClipboardItem } from "@/types/interfaces"
 
 interface FileFolderProps {
-    item: FileFolderItem;
-    onAdd: (parentId: string, type: 'file' | 'folder') => void;
-    onDelete: (id: string) => void;
-    onRename: (id: string, newName: string) => void;
-    selectedItems: string[];
-    onSelect: (id: string, mode: 'single' | 'toggle' | 'range') => void;
-    isSelected: boolean;
-    onCopy: (id: string) => void;
-    onPaste: (id: string) => void;
-    onCut: (id: string) => void;
-    clipboard: FileFolderItem | null;
-    currentEditingId: string | null;
-    setCurrentEditingId: (id: string | null) => void;
-    onExport: (id: string) => void;
-    onImport: (id: string) => void;
-    path?: string;
-    onError?: (message: string) => void;
-    openFolders: string[];
-    setOpenFolders: React.Dispatch<React.SetStateAction<string[]>>;
-    onDragStart: (e: React.DragEvent, item: FileFolderItem, index: number, parentId: string | null) => void;
-    onDragOver: (e: React.DragEvent, item: FileFolderItem, index: number, parentId: string | null) => void;
-    onDrop: (e: React.DragEvent, item: FileFolderItem, index: number, parentId: string | null) => void;
-    index: number;
-    parentId: string | null;
+    item: FileItem
+    onAdd: (parentId: string, name: string, type: "file" | "folder") => void
+    onDelete: (id: string | string[]) => void
+    onRename: (id: string, newName: string) => void
+    selectedItems: string[]
+    onSelect: (id: string, isMultiSelect?: boolean) => void
+    isSelected: boolean
+    onCopy: (id: string | string[]) => void
+    onPaste: (parentId: string) => void
+    onCut: (id: string | string[]) => void
+    clipboard: ClipboardItem | null
+    currentEditingId: string | null
+    setCurrentEditingId: (id: string | null) => void
+    onExport: () => void
+    onImport: (event: React.ChangeEvent<HTMLInputElement>) => void
+    path?: string
+    onError?: (message: string) => void
+    openFolders: Set<string>
+    setOpenFolders: React.Dispatch<React.SetStateAction<Set<string>>>
+    onDragStart: (e: React.DragEvent, id: string) => void
+    onDragOver: (e: React.DragEvent) => void
+    onDrop: (e: React.DragEvent, targetId: string, position?: "before" | "after" | "inside") => void
+    index: number
+    parentId: string | null
 }
 
-const FileFolder: React.FC<FileFolderProps> = ({ 
-    item, 
-    onAdd, 
-    onDelete, 
-    onRename, 
+const FileFolder: React.FC<FileFolderProps> = ({
+    item,
+    onAdd,
+    onDelete,
+    onRename,
     selectedItems,
     onSelect,
     isSelected,
@@ -48,7 +67,7 @@ const FileFolder: React.FC<FileFolderProps> = ({
     setCurrentEditingId,
     onExport,
     onImport,
-    path = '',
+    path = "",
     onError,
     openFolders,
     setOpenFolders,
@@ -56,26 +75,21 @@ const FileFolder: React.FC<FileFolderProps> = ({
     onDragOver,
     onDrop,
     index,
-    parentId
+    parentId,
 }) => {
-    const [isOpen, setIsOpen] = useState<boolean>(() => openFolders.includes(item.id))
     const [editName, setEditName] = useState<string>(item.name)
     const [showInfo, setShowInfo] = useState<boolean>(false)
-    const [inputWidth, setInputWidth] = useState<string>('auto')
-    const [isDraggingOver, setIsDraggingOver] = useState<boolean>(false)
+    const [inputWidth, setInputWidth] = useState<string>("auto")
+    const [dragPosition, setDragPosition] = useState<"before" | "after" | "inside" | null>(null)
     const inputRef = useRef<HTMLInputElement>(null)
     const measureRef = useRef<HTMLSpanElement>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const itemRef = useRef<HTMLDivElement>(null)
     const isEditing = currentEditingId === item.id
     const currentPath = `${path}/${item.name}`
 
-    // Update openFolders when isOpen changes
-    useEffect(() => {
-        if (isOpen) {
-            setOpenFolders(prev => [...new Set([...prev, item.id])])
-        } else {
-            setOpenFolders(prev => prev.filter(id => id !== item.id))
-        }
-    }, [isOpen, item.id, setOpenFolders])
+    // Get isOpen state directly from openFolders Set
+    const isOpen = openFolders.has(item.id)
 
     useEffect(() => {
         if (isEditing && inputRef.current) {
@@ -89,26 +103,9 @@ const FileFolder: React.FC<FileFolderProps> = ({
         }
     }, [isEditing])
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (isSelected) {
-                if (e.key === 'Delete') {
-                    onDelete(item.id)
-                } else if (e.ctrlKey || e.metaKey) {
-                    if (e.key === 'c') onCopy(item.id)
-                    else if (e.key === 'x') onCut(item.id)
-                    else if (e.key === 'v' && item.type === 'folder') onPaste(item.id)
-                }
-            }
-        }
-
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isSelected, item.id, onDelete, onCopy, onCut, onPaste])
-
     const handleRename = () => {
-        if (editName.trim() === '') {
-            onError?.('File name cannot be empty')
+        if (editName.trim() === "") {
+            onError?.("File name cannot be empty")
             setEditName(item.name)
             setCurrentEditingId(null)
             return
@@ -122,21 +119,36 @@ const FileFolder: React.FC<FileFolderProps> = ({
         setCurrentEditingId(null)
     }
 
+    const toggleFolder = () => {
+        if (item.type === "folder") {
+            setOpenFolders((prev) => {
+                const newSet = new Set(prev)
+                if (newSet.has(item.id)) {
+                    newSet.delete(item.id)
+                } else {
+                    newSet.add(item.id)
+                }
+                return newSet
+            })
+        }
+    }
+
     const handleClick = (e: React.MouseEvent) => {
         if (currentEditingId && currentEditingId !== item.id) {
             handleRename()
         }
 
-        if (item.type === 'folder') {
-            setIsOpen(!isOpen)
+        if (item.type === "folder") {
+            toggleFolder()
         }
-        
+
         if (e.ctrlKey || e.metaKey) {
-            onSelect(item.id, 'toggle')
+            onSelect(item.id, true)
         } else if (e.shiftKey) {
-            onSelect(item.id, 'range')
+            // Range selection logic could be implemented here
+            onSelect(item.id, true)
         } else if (!isEditing) {
-            onSelect(item.id, 'single')
+            onSelect(item.id, false)
         }
     }
 
@@ -147,56 +159,117 @@ const FileFolder: React.FC<FileFolderProps> = ({
 
     const handleDragStart = (e: React.DragEvent) => {
         e.stopPropagation()
-        onDragStart(e, item, index, parentId)
+        onDragStart(e, item.id)
+    }
+
+    const getDragPosition = (e: React.DragEvent): "before" | "after" | "inside" => {
+        if (!itemRef.current) return "inside"
+
+        const rect = itemRef.current.getBoundingClientRect()
+        const y = e.clientY - rect.top
+        const height = rect.height
+
+        if (item.type === "folder") {
+            // For folders, allow all three positions
+            if (y < height * 0.25) return "before"
+            if (y > height * 0.75) return "after"
+            return "inside"
+        } else {
+            // For files, only allow before/after
+            if (y < height * 0.5) return "before"
+            return "after"
+        }
     }
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setIsDraggingOver(true)
-        onDragOver(e, item, index, parentId)
+
+        const position = getDragPosition(e)
+        setDragPosition(position)
+        onDragOver(e)
     }
 
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setIsDraggingOver(false)
+
+        // Only clear drag position if we're actually leaving the element
+        if (!itemRef.current?.contains(e.relatedTarget as Node)) {
+            setDragPosition(null)
+        }
     }
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        setIsDraggingOver(false)
-        onDrop(e, item, index, parentId)
+
+        const position = dragPosition || getDragPosition(e)
+        setDragPosition(null)
+        onDrop(e, item.id, position)
+    }
+
+    const handleAddFile = () => {
+        onAdd(item.id, "New File", "file")
+        // Open the folder when adding a new item
+        setOpenFolders((prev) => new Set([...prev, item.id]))
+    }
+
+    const handleAddFolder = () => {
+        onAdd(item.id, "New Folder", "folder")
+        // Open the folder when adding a new item
+        setOpenFolders((prev) => new Set([...prev, item.id]))
+    }
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handleContextMenuAction = (action: string) => {
+        const targetIds = selectedItems.includes(item.id) ? selectedItems : [item.id]
+
+        switch (action) {
+            case "copy":
+                onCopy(targetIds)
+                break
+            case "cut":
+                onCut(targetIds)
+                break
+            case "delete":
+                onDelete(targetIds)
+                break
+        }
+    }
+
+    const getDropIndicatorClass = () => {
+        if (!dragPosition) return ""
+
+        switch (dragPosition) {
+            case "before":
+                return "border-t-2 border-blue-500"
+            case "after":
+                return "border-b-2 border-blue-500"
+            case "inside":
+                return item.type === "folder" ? "border-2 border-dashed border-blue-500 bg-blue-50 dark:bg-blue-900/20" : ""
+            default:
+                return ""
+        }
     }
 
     return (
         <div className="relative group rounded-lg">
-            {/* Drop zone above the item */}
-            <div
-                className="h-1 -my-1"
-                onDragOver={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (parentId !== null) { // Only show for non-root items
-                        e.dataTransfer.dropEffect = 'move'
-                    }
-                }}
-                onDrop={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    onDrop(e, item, index, parentId)
-                }}
-            />
+            {/* Hidden file input for import */}
+            <input ref={fileInputRef} type="file" accept=".json" onChange={onImport} style={{ display: "none" }} />
 
             <ContextMenu>
                 <ContextMenuTrigger>
-                    <div 
+                    <div
+                        ref={itemRef}
                         className={`
-                            flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer select-none
-                            ${isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''}
-                            ${isDraggingOver ? 'border-2 border-dashed border-blue-500' : ''}
-                        `}
+              flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer select-none transition-colors
+              ${isSelected ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700" : ""}
+              ${getDropIndicatorClass()}
+            `}
                         onClick={handleClick}
                         onMouseEnter={() => setShowInfo(true)}
                         onMouseLeave={() => setShowInfo(false)}
@@ -207,8 +280,12 @@ const FileFolder: React.FC<FileFolderProps> = ({
                         onDrop={handleDrop}
                     >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                            {item.type === 'folder' ? (
-                                isOpen ? <FolderOpen className="w-4 h-4 shrink-0 text-yellow-500" /> : <Folder className="w-4 h-4 shrink-0 text-yellow-500" />
+                            {item.type === "folder" ? (
+                                isOpen ? (
+                                    <FolderOpen className="w-4 h-4 shrink-0 text-yellow-500" />
+                                ) : (
+                                    <Folder className="w-4 h-4 shrink-0 text-yellow-500" />
+                                )
                             ) : (
                                 <span className="w-4 h-4 shrink-0 flex items-center justify-center">
                                     {(() => {
@@ -219,10 +296,10 @@ const FileFolder: React.FC<FileFolderProps> = ({
                             )}
                             {isEditing ? (
                                 <>
-                                    <span 
-                                        ref={measureRef} 
+                                    <span
+                                        ref={measureRef}
                                         className="text-sm invisible absolute whitespace-pre"
-                                        style={{ fontFamily: 'inherit' }}
+                                        style={{ fontFamily: "inherit" }}
                                     >
                                         {editName}
                                     </span>
@@ -238,21 +315,21 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                         }}
                                         onBlur={handleRename}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
+                                            if (e.key === "Enter") {
                                                 handleRename()
-                                            } else if (e.key === 'Escape') {
+                                            } else if (e.key === "Escape") {
                                                 setEditName(item.name)
                                                 setCurrentEditingId(null)
                                             }
                                             e.stopPropagation()
                                         }}
-                                        className="h-6 px-1 py-0"
+                                        className="h-6 px-1 py-0 text-sm"
                                         style={{ width: inputWidth }}
                                         onClick={(e) => e.stopPropagation()}
                                     />
                                 </>
                             ) : (
-                                <span 
+                                <span
                                     className="text-sm truncate cursor-text px-1 overflow-hidden text-ellipsis"
                                     onDoubleClick={(e) => {
                                         e.stopPropagation()
@@ -264,72 +341,73 @@ const FileFolder: React.FC<FileFolderProps> = ({
                             )}
                         </div>
                         {showInfo && !isEditing && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate">
-                                {currentPath}
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate max-w-32">{currentPath}</span>
+                        )}
+                        {selectedItems.length > 1 && selectedItems.includes(item.id) && (
+                            <span className="text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5 ml-2">
+                                {selectedItems.length}
                             </span>
                         )}
                     </div>
                 </ContextMenuTrigger>
 
                 <ContextMenuContent className="w-48">
-                    {item.type === 'folder' && (
+                    {item.type === "folder" && (
                         <>
-                            <ContextMenuItem onClick={() => {
-                                onAdd(item.id, 'file')
-                                setIsOpen(true)
-                            }} className="gap-2">
+                            <ContextMenuItem onClick={handleAddFile} className="gap-2">
                                 <Plus className="w-4 h-4" /> New File
                             </ContextMenuItem>
-                            <ContextMenuItem onClick={() => {
-                                onAdd(item.id, 'folder')
-                                setIsOpen(true)
-                            }} className="gap-2">
+                            <ContextMenuItem onClick={handleAddFolder} className="gap-2">
                                 <Plus className="w-4 h-4" /> New Folder
                             </ContextMenuItem>
                             <ContextMenuSeparator />
                         </>
                     )}
-                    <ContextMenuItem onClick={() => onCopy(item.id)} className="gap-2">
-                        <Copy className="w-4 h-4" /> Copy
+                    <ContextMenuItem onClick={() => handleContextMenuAction("copy")} className="gap-2">
+                        <Copy className="w-4 h-4" /> Copy {selectedItems.length > 1 ? `(${selectedItems.length})` : ""}
                     </ContextMenuItem>
-                    <ContextMenuItem onClick={() => onCut(item.id)} className="gap-2">
-                        <Scissors className="w-4 h-4" /> Cut
+                    <ContextMenuItem onClick={() => handleContextMenuAction("cut")} className="gap-2">
+                        <Scissors className="w-4 h-4" /> Cut {selectedItems.length > 1 ? `(${selectedItems.length})` : ""}
                     </ContextMenuItem>
-                    {item.type === 'folder' && (
+                    {item.type === "folder" && (
                         <>
-                            <ContextMenuItem 
+                            <ContextMenuItem
                                 onClick={() => onPaste(item.id)}
                                 disabled={!clipboard}
-                                className={`gap-2 ${!clipboard ? 'opacity-50' : ''}`}
+                                className={`gap-2 ${!clipboard ? "opacity-50" : ""}`}
                             >
                                 <ClipboardPaste className="w-4 h-4" /> Paste
                             </ContextMenuItem>
                             <ContextMenuSeparator />
-                            <ContextMenuItem onClick={() => onImport(item.id)} className="gap-2">
+                            <ContextMenuItem onClick={handleImportClick} className="gap-2">
                                 <Upload className="w-4 h-4" /> Import
                             </ContextMenuItem>
                         </>
                     )}
-                    <ContextMenuItem onClick={() => onExport(item.id)} className="gap-2">
+                    <ContextMenuItem onClick={onExport} className="gap-2">
                         <Download className="w-4 h-4" /> Export
                     </ContextMenuItem>
                     <ContextMenuSeparator />
-                    <ContextMenuItem onClick={() => {
-                        setEditName(item.name)
-                        setCurrentEditingId(item.id)
-                    }} className="gap-2">
+                    <ContextMenuItem
+                        onClick={() => {
+                            setEditName(item.name)
+                            setCurrentEditingId(item.id)
+                        }}
+                        className="gap-2"
+                        disabled={selectedItems.length > 1}
+                    >
                         <Pencil className="w-4 h-4" /> Rename
                     </ContextMenuItem>
-                    <ContextMenuItem 
-                        onClick={() => onDelete(item.id)}
+                    <ContextMenuItem
+                        onClick={() => handleContextMenuAction("delete")}
                         className="gap-2 text-red-600 dark:text-red-400"
                     >
-                        <Trash2 className="w-4 h-4" /> Delete
+                        <Trash2 className="w-4 h-4" /> Delete {selectedItems.length > 1 ? `(${selectedItems.length})` : ""}
                     </ContextMenuItem>
                 </ContextMenuContent>
             </ContextMenu>
 
-            {item.type === 'folder' && item.children && isOpen && (
+            {item.type === "folder" && item.children && isOpen && (
                 <div className="ml-4 pl-4 border-l border-gray-200 dark:border-gray-700">
                     {item.children.map((child, childIndex) => (
                         <React.Fragment key={child.id}>

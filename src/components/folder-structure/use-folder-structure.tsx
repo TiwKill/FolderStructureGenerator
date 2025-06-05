@@ -1,677 +1,603 @@
 "use client"
 
-import { useState, useCallback, useEffect } from 'react'
-import { toast } from 'sonner'
-import { FileFolderItem } from '@/types/interfaces'
-import { INITIAL_STRUCTURE } from './constants'
-import { formatStructureForDisplay, formatTreeStructure, deepCloneItem } from './utils'
+import type React from "react"
+
+import { useState, useEffect, useCallback } from "react"
+import { toast } from "sonner"
+import type { FileItem, ClipboardItem } from "@/types/interfaces"
+import {
+    createDefaultStructure,
+    generateStructureDisplay,
+    exportStructure,
+    importStructure,
+    generateUniqueName,
+    generateUniqueNameForNewItem,
+} from "./utils"
 
 const STORAGE_KEY_PREFIX = "project-structure-data-"
 
-export const useFolderStructure = () => {
+export const useFolderStructure = (tabId?: string) => {
+    // Core state
+    const [structure, setStructure] = useState<FileItem>(createDefaultStructure())
+    const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["root"]))
     const [selectedItems, setSelectedItems] = useState<string[]>([])
-    const [lastSelectedItem, setLastSelectedItem] = useState<string | null>(null)
-    const [clipboard, setClipboard] = useState<FileFolderItem | null>(null)
-    const [clipboardType, setClipboardType] = useState<'copy' | 'cut' | null>(null)
+    const [clipboard, setClipboard] = useState<ClipboardItem | null>(null)
     const [currentEditingId, setCurrentEditingId] = useState<string | null>(null)
-    const [structureDisplay, setStructureDisplay] = useState<string>('')
-    const [showClearDialog, setShowClearDialog] = useState<boolean>(false)
-    const [showExportDialog, setShowExportDialog] = useState<boolean>(false)
-    const [currentExportItem, setCurrentExportItem] = useState<FileFolderItem | null>(null)
-    const [showShortcutsDialog, setShowShortcutsDialog] = useState<boolean>(false)
-    const [draggedItem, setDraggedItem] = useState<FileFolderItem | null>(null)
-    const [draggedItemParentId, setDraggedItemParentId] = useState<string | null>(null)
+    const [selectedFramework, setSelectedFramework] = useState<string | null>(null)
 
-    const [structure, setStructure] = useState<FileFolderItem>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('folderStructure')
-            if (saved) {
-                try {
-                    return JSON.parse(saved)
-                } catch (e) {
-                    console.error('Failed to parse saved structure:', e)
+    // Dialog states
+    const [showClearDialog, setShowClearDialog] = useState(false)
+    const [showExportDialog, setShowExportDialog] = useState(false)
+    const [showShortcutsDialog, setShowShortcutsDialog] = useState(false)
+
+    // Computed values
+    const structureDisplay = generateStructureDisplay(structure)
+
+    // Get storage key for this tab
+    const getStorageKey = useCallback(() => {
+        return tabId ? `${STORAGE_KEY_PREFIX}${tabId}` : STORAGE_KEY_PREFIX + "default"
+    }, [tabId])
+
+    // Load data from localStorage
+    useEffect(() => {
+        if (typeof window === "undefined") return
+
+        try {
+            const storageKey = getStorageKey()
+            const savedData = localStorage.getItem(storageKey)
+
+            if (savedData) {
+                const parsedData = JSON.parse(savedData)
+                if (parsedData.structure) {
+                    setStructure(parsedData.structure)
+                }
+                if (parsedData.openFolders && Array.isArray(parsedData.openFolders)) {
+                    setOpenFolders(new Set(parsedData.openFolders))
+                }
+                if (parsedData.selectedFramework) {
+                    setSelectedFramework(parsedData.selectedFramework)
                 }
             }
+        } catch (error) {
+            console.error("Error loading structure from localStorage:", error)
+            toast.error("Failed to load saved structure")
         }
-        return INITIAL_STRUCTURE
-    })
+    }, [getStorageKey])
 
-    const [selectedFramework, setSelectedFramework] = useState<string | null>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('selectedFramework')
+    // Save data to localStorage
+    const saveToLocalStorage = useCallback(() => {
+        if (typeof window === "undefined") return
+
+        try {
+            const storageKey = getStorageKey()
+            const dataToSave = {
+                structure,
+                openFolders: Array.from(openFolders),
+                selectedFramework,
+                lastUpdated: Date.now(),
+            }
+            localStorage.setItem(storageKey, JSON.stringify(dataToSave))
+        } catch (error) {
+            console.error("Error saving structure to localStorage:", error)
+            toast.error("Failed to save structure")
+        }
+    }, [structure, openFolders, selectedFramework, getStorageKey])
+
+    // Auto-save when structure or openFolders changes
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            saveToLocalStorage()
+        }, 300) // Debounce saves
+
+        return () => clearTimeout(timeoutId)
+    }, [saveToLocalStorage])
+
+    // Utility functions
+    const findItemById = useCallback((items: FileItem, id: string): FileItem | null => {
+        if (items.id === id) return items
+        if (items.children) {
+            for (const child of items.children) {
+                const found = findItemById(child, id)
+                if (found) return found
+            }
         }
         return null
-    })
+    }, [])
 
-    const [selectedVersion, setSelectedVersion] = useState<string | null>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('selectedVersion')
+    const findParentById = useCallback((items: FileItem, targetId: string): FileItem | null => {
+        if (items.children) {
+            for (const child of items.children) {
+                if (child.id === targetId) {
+                    return items
+                }
+                const found = findParentById(child, targetId)
+                if (found) return found
+            }
         }
         return null
-    })
+    }, [])
 
-    const [openFolders, setOpenFolders] = useState<string[]>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('openFolders')
-            if (saved) {
-                try {
-                    return JSON.parse(saved)
-                } catch (e) {
-                    console.error('Failed to parse saved open folders:', e)
-                    return []
-                }
+    const updateStructure = useCallback((updater: (prev: FileItem) => FileItem) => {
+        setStructure(updater)
+    }, [])
+
+    // Event handlers
+    const handleSelect = useCallback((id: string, isMultiSelect = false) => {
+        setSelectedItems((prev) => {
+            if (isMultiSelect) {
+                return prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
             }
-        }
-        return []
-    })
-
-    // Find Item
-    const findItem = useCallback(
-        (id: string, items: FileFolderItem[] = [structure]): FileFolderItem | null => {
-            for (const item of items) {
-                if (item.id === id) return item
-                if (item.children) {
-                    const found = findItem(id, item.children)
-                    if (found) return found
-                }
-            }
-            return null
-        },
-        [structure]
-    )
-
-    // Find Parent
-    const findParent = useCallback(
-        (id: string, items: FileFolderItem[] = [structure]): FileFolderItem | null => {
-            for (const item of items) {
-                if (item.children) {
-                    if (item.children.some((child) => child.id === id)) return item
-                    const found = findParent(id, item.children)
-                    if (found) return found
-                }
-            }
-            return null
-        },
-        [structure]
-    )
-
-    // Check Duplicate Name
-    const checkDuplicateName = useCallback((parentId: string, name: string, excludeId: string | null = null): boolean => {
-        const parent = findItem(parentId)
-        if (!parent || !parent.children) return false
-
-        return parent.children.some(child =>
-            child.id !== excludeId &&
-            child.name.toLowerCase() === name.toLowerCase()
-        )
-    }, [findItem])
-
-    // Copy
-    const onCopy = useCallback((id: string) => {
-        const item = findItem(id)
-        if (item) {
-            setClipboard(deepCloneItem(item))
-            setClipboardType('copy')
-            toast.success(`Copied ${item.type}: ${item.name}`)
-        }
-    }, [findItem])
-
-    // Cut
-    const onCut = useCallback((id: string) => {
-        if (id === 'root') {
-            toast.error('Cannot cut the root folder')
-            return
-        }
-        const item = findItem(id)
-        if (item) {
-            setClipboard(deepCloneItem(item))
-            setClipboardType('cut')
-            toast.success(`Cut ${item.type}: ${item.name}`)
-        }
-    }, [findItem])
-
-    // Delete
-    const onDelete = useCallback((id: string) => {
-        if (id === 'root') {
-            toast.error('Cannot delete the root folder')
-            return
-        }
-
-        const item = findItem(id)
-        if (!item) return
-
-        setStructure((prev) => {
-            const newStructure = JSON.parse(JSON.stringify(prev))
-            const parent = findParent(id, [newStructure])
-
-            if (parent) {
-                parent.children = parent.children?.filter(child => child.id !== id) || []
-            }
-
-            return newStructure
+            return [id]
         })
+    }, [])
 
-        // Clear selection if the deleted item was selected
-        setSelectedItems(prev => prev.filter(itemId => itemId !== id))
-        setLastSelectedItem(null)
+    const onAdd = useCallback(
+        (parentId: string, name: string, type: "file" | "folder") => {
+            console.log("onAdd called with:", { parentId, name, type })
 
-        toast.success(`Deleted ${item.type}: ${item.name}`)
-    }, [findItem, findParent])
+            let newItemId: string | null = null
+            let finalName: string | null = null
 
-    // Paste
-    const onPaste = useCallback((targetId: string) => {
-        if (!clipboard || !clipboardType) {
-            toast.error('Nothing to paste')
-            return
-        }
+            updateStructure((prev) => {
+                const addToItem = (item: FileItem): FileItem => {
+                    if (item.id === parentId) {
+                        console.log(
+                            "Found parent:",
+                            item.name,
+                            "with children:",
+                            item.children?.map((c) => c.name),
+                        )
 
-        const targetFolder = findItem(targetId)
-        if (!targetFolder || targetFolder.type !== 'folder') {
-            toast.error('Can only paste into folders')
-            return
-        }
+                        // Generate unique name using the CURRENT children (not stale state)
+                        const uniqueName = generateUniqueNameForNewItem(item.children || [], name)
+                        console.log("Generated unique name:", uniqueName)
 
-        // Check for duplicate names
-        if (checkDuplicateName(targetId, clipboard.name)) {
-            toast.error('An item with this name already exists in the target folder')
-            return
-        }
+                        finalName = uniqueName
 
-        setStructure((prev) => {
-            const newStructure = JSON.parse(JSON.stringify(prev))
-            const target = findItem(targetId, [newStructure])
+                        const newItem: FileItem = {
+                            id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            name: uniqueName,
+                            type,
+                            children: type === "folder" ? [] : undefined,
+                        }
 
-            if (!target || target.type !== 'folder') return prev
+                        newItemId = newItem.id
+                        console.log("Creating new item:", newItem)
 
-            if (!target.children) target.children = []
+                        const updatedItem = {
+                            ...item,
+                            children: [...(item.children || []), newItem],
+                        }
 
-            // For copy operation, create a new item with a new ID
-            if (clipboardType === 'copy') {
-                const newItem = deepCloneItem(clipboard)
-                newItem.id = crypto.randomUUID()
-                if (newItem.children) {
-                    const updateIds = (item: FileFolderItem) => {
-                        item.id = crypto.randomUUID()
-                        if (item.children) {
-                            item.children.forEach(updateIds)
+                        console.log(
+                            "Updated parent children:",
+                            updatedItem.children?.map((c) => c.name),
+                        )
+                        return updatedItem
+                    }
+                    if (item.children) {
+                        return {
+                            ...item,
+                            children: item.children.map(addToItem),
                         }
                     }
-                    updateIds(newItem)
+                    return item
                 }
-                target.children.push(newItem)
-            }
-            // For cut operation, move the item
-            else if (clipboardType === 'cut') {
-                const sourceParent = findParent(clipboard.id, [newStructure])
-                if (sourceParent) {
-                    sourceParent.children = sourceParent.children?.filter(child => child.id !== clipboard.id) || []
-                }
-                target.children.push(clipboard)
+                return addToItem(prev)
+            })
+
+            if (type === "folder" && newItemId) {
+                setOpenFolders((prev) => new Set([...prev, newItemId!]))
             }
 
-            return newStructure
-        })
-
-        if (clipboardType === 'cut') {
-            setClipboard(null)
-            setClipboardType(null)
-        }
-
-        toast.success(`Pasted ${clipboard.type}: ${clipboard.name}`)
-    }, [clipboard, clipboardType, findItem, findParent, checkDuplicateName])
-
-    // Add
-    const onAdd = useCallback((parentId: string, type: 'file' | 'folder') => {
-        const parent = findItem(parentId)
-        if (!parent || parent.type !== 'folder') {
-            toast.error('Can only create items inside folders')
-            return
-        }
-
-        // Generate a default name
-        const baseName = type === 'folder' ? 'New Folder' : 'New File'
-        let newName = baseName
-        let counter = 1
-
-        // Find a unique name
-        while (checkDuplicateName(parentId, newName)) {
-            newName = `${baseName} (${counter})`
-            counter++
-        }
-
-        const newItem: FileFolderItem = {
-            id: crypto.randomUUID(),
-            name: newName,
-            type,
-            children: type === 'folder' ? [] : undefined,
-            size: type === 'file' ? 0 : undefined
-        }
-
-        setStructure((prev) => {
-            const newStructure = JSON.parse(JSON.stringify(prev))
-            const targetParent = findItem(parentId, [newStructure])
-
-            if (targetParent && targetParent.type === 'folder') {
-                if (!targetParent.children) targetParent.children = []
-                targetParent.children.push(newItem)
+            // Auto-start editing the new item
+            if (newItemId) {
+                setCurrentEditingId(newItemId)
             }
+        },
+        [updateStructure],
+    )
 
-            return newStructure
-        })
+    const onDelete = useCallback(
+        (ids: string | string[]) => {
+            const idsToDelete = Array.isArray(ids) ? ids : [ids]
+            const itemsToDelete = idsToDelete.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
 
-        // Open the parent folder if it's not already open
-        if (!openFolders.includes(parentId)) {
-            setOpenFolders(prev => [...prev, parentId])
-        }
+            if (itemsToDelete.length === 0) return
 
-        // Select and start editing the new item
-        setSelectedItems([newItem.id])
-        setLastSelectedItem(newItem.id)
-        setCurrentEditingId(newItem.id)
-
-    }, [findItem, checkDuplicateName, openFolders])
-
-    // Keyboard Shortcuts
-    const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {
-        // Only handle shortcuts when no input is focused
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-            return
-        }
-
-        // Handle Ctrl/Cmd + C (Copy)
-        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                onCopy(selectedItems[0])
-            }
-        }
-        // Handle Ctrl/Cmd + X (Cut)
-        else if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                onCut(selectedItems[0])
-            }
-        }
-        // Handle Ctrl/Cmd + V (Paste)
-        else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                const selectedItem = findItem(selectedItems[0])
-                if (selectedItem?.type === 'folder') {
-                    onPaste(selectedItem.id)
-                }
-            }
-        }
-        // Handle Delete key
-        else if (e.key === 'Delete') {
-            e.preventDefault()
-            if (selectedItems.length > 0) {
-                // Delete all selected items
-                selectedItems.forEach(id => {
-                    if (id !== 'root') {
-                        onDelete(id)
+            updateStructure((prev) => {
+                const deleteFromItem = (item: FileItem): FileItem => {
+                    if (item.children) {
+                        return {
+                            ...item,
+                            children: item.children.filter((child) => !idsToDelete.includes(child.id)).map(deleteFromItem),
+                        }
                     }
-                })
-            }
-        }
-        // Handle Ctrl/Cmd + N (New File)
-        else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                const selectedItem = findItem(selectedItems[0])
-                if (selectedItem?.type === 'folder') {
-                    onAdd(selectedItem.id, 'file')
+                    return item
                 }
-            }
-        }
-        // Handle Ctrl/Cmd + Shift + N (New Folder)
-        else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'N') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                const selectedItem = findItem(selectedItems[0])
-                if (selectedItem?.type === 'folder') {
-                    onAdd(selectedItem.id, 'folder')
+                return deleteFromItem(prev)
+            })
+
+            setSelectedItems((prev) => prev.filter((selectedId) => !idsToDelete.includes(selectedId)))
+            setOpenFolders((prev) => {
+                const newSet = new Set(prev)
+                idsToDelete.forEach((id) => newSet.delete(id))
+                return newSet
+            })
+
+            const itemNames = itemsToDelete.map((item) => item.name).join(", ")
+        },
+        [structure, findItemById, updateStructure],
+    )
+
+    const onRename = useCallback(
+        (id: string, newName: string) => {
+            updateStructure((prev) => {
+                const renameInItem = (item: FileItem): FileItem => {
+                    if (item.id === id) {
+                        return { ...item, name: newName }
+                    }
+                    if (item.children) {
+                        return {
+                            ...item,
+                            children: item.children.map(renameInItem),
+                        }
+                    }
+                    return item
                 }
+                return renameInItem(prev)
+            })
+
+        },
+        [updateStructure],
+    )
+
+    const onCopy = useCallback(
+        (ids: string | string[]) => {
+            const idsToProcess = Array.isArray(ids) ? ids : [ids]
+            const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
+
+            if (items.length > 0) {
+                setClipboard({ item: items[0], operation: "copy" }) // For now, handle single item
+                const itemNames = items.map((item) => item.name).join(", ")
             }
-        }
-        // Handle F2 (Rename)
-        else if (e.key === 'F2') {
-            e.preventDefault()
-            if (selectedItems.length === 1) {
-                setCurrentEditingId(selectedItems[0])
+        },
+        [structure, findItemById],
+    )
+
+    const onCut = useCallback(
+        (ids: string | string[]) => {
+            const idsToProcess = Array.isArray(ids) ? ids : [ids]
+            const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
+
+            if (items.length > 0) {
+                setClipboard({ item: items[0], operation: "cut" }) // For now, handle single item
+                const itemNames = items.map((item) => item.name).join(", ")
             }
-        }
-    }, [selectedItems, onCopy, onCut, onPaste, onDelete, onAdd, findItem])
+        },
+        [structure, findItemById],
+    )
 
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyboardShortcuts)
-        return () => window.removeEventListener('keydown', handleKeyboardShortcuts)
-    }, [handleKeyboardShortcuts])
+    const onPaste = useCallback(
+        (parentId: string) => {
+            if (!clipboard) return
 
-    // Save to localStorage whenever structure changes
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('folderStructure', JSON.stringify(structure))
-            // Update the structure display
-            const formatted = formatStructureForDisplay(structure)
-            setStructureDisplay(formatted)
-        }
-    }, [structure])
+            updateStructure((prev) => {
+                const pasteToItem = (item: FileItem): FileItem => {
+                    if (item.id === parentId) {
+                        // Generate unique name using current children
+                        const uniqueName = generateUniqueNameForNewItem(item.children || [], clipboard.item.name)
 
-    // Save openFolders to localStorage when it changes
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('openFolders', JSON.stringify(openFolders))
-        }
-    }, [openFolders])
+                        const newItem: FileItem = {
+                            ...clipboard.item,
+                            id: `${clipboard.item.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            name: uniqueName,
+                        }
 
-    // Select
-    const handleSelect = (id: string, mode: 'single' | 'toggle' | 'range') => {
-        if (mode === 'single') {
-            setSelectedItems([id])
-            setLastSelectedItem(id)
-        } else if (mode === 'toggle') {
-            setSelectedItems(prev =>
-                prev.includes(id)
-                    ? prev.filter(item => item !== id)
-                    : [...prev, id]
-            )
-            setLastSelectedItem(id)
-        } else if (mode === 'range' && lastSelectedItem) {
-            const allItems = getAllItems()
-            const currentIndex = allItems.indexOf(id)
-            const lastIndex = allItems.indexOf(lastSelectedItem)
-            const start = Math.min(currentIndex, lastIndex)
-            const end = Math.max(currentIndex, lastIndex)
-            const itemsInRange = allItems.slice(start, end + 1)
-            setSelectedItems(itemsInRange)
-        }
-    }
+                        return {
+                            ...item,
+                            children: [...(item.children || []), newItem],
+                        }
+                    }
+                    if (item.children) {
+                        return {
+                            ...item,
+                            children: item.children.map(pasteToItem),
+                        }
+                    }
+                    return item
+                }
+                return pasteToItem(prev)
+            })
 
-    // Rename
-    const onRename = (id: string, newName: string) => {
-        const item = findItem(id)
-        if (!item) return
-
-        const parentId = findParent(id)?.id
-        if (!parentId) return
-
-        // Check for duplicate names in the same folder
-        if (checkDuplicateName(parentId, newName, id)) {
-            toast.error(`A file or folder with the name "${newName}" already exists in this folder`)
-            return
-        }
-
-        setStructure((prev) => {
-            const newStructure = JSON.parse(JSON.stringify(prev))
-            const item = findItem(id, [newStructure])
-            if (item) {
-                item.name = newName
+            if (clipboard.operation === "cut") {
+                onDelete(clipboard.item.id)
             }
-            return newStructure
-        })
-    }
 
-    // Export
-    const onExport = (id: string) => {
-        const item = findItem(id)
-        if (!item) return
+            setClipboard(null)
+        },
+        [clipboard, updateStructure, onDelete],
+    )
 
-        // Create export menu using Dialog
+    const onExport = useCallback(() => {
         setShowExportDialog(true)
-        setCurrentExportItem(item)
-    }
+    }, [])
 
-    // Handle Export
-    const handleExport = (format: 'tree' | 'json') => {
-        if (!currentExportItem) return
+    const onImport = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
 
-        if (format === 'tree') {
-            // Export as tree structure (.txt)
-            const treeStructure = formatTreeStructure(currentExportItem)
-            const blob = new Blob([treeStructure], { type: 'text/plain' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${currentExportItem.name}-structure.txt`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-        } else if (format === 'json') {
-            // Export as JSON
-            const data = JSON.stringify(currentExportItem, null, 2)
-            const blob = new Blob([data], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `${currentExportItem.name}.json`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string
+                const imported = importStructure(content)
+                setStructure(imported)
+                toast.success("Structure imported successfully")
+            } catch (error) {
+                toast.error("Failed to import structure")
+            }
+        }
+        reader.readAsText(file)
+    }, [])
+
+    const handleError = useCallback((message: string) => {
+        toast.error(message)
+    }, [])
+
+    const handleClearStructure = useCallback(() => {
+        setStructure(createDefaultStructure())
+        setOpenFolders(new Set(["root"]))
+        setSelectedItems([])
+        setClipboard(null)
+        setSelectedFramework(null)
+        setShowClearDialog(false)
+        toast.success("Structure cleared")
+    }, [])
+
+    const handleExport = useCallback(
+        (format: "json" | "text") => {
+            exportStructure(structure, format)
+            setShowExportDialog(false)
+            toast.success(`Structure exported as ${format.toUpperCase()}`)
+        },
+        [structure],
+    )
+
+    const handleFrameworkSelect = useCallback((newStructure: FileItem) => {
+        try {
+            setStructure(newStructure)
+            setSelectedFramework(newStructure.name)
+            setOpenFolders(new Set(["root"]))
+            setSelectedItems([])
+            setClipboard(null)
+        } catch (error) {
+            console.error("Error applying framework structure:", error)
+            toast.error("Failed to apply framework template")
+        }
+    }, [])
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (currentEditingId) return // Don't handle shortcuts while editing
+
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case "c":
+                        if (selectedItems.length > 0) {
+                            e.preventDefault()
+                            onCopy(selectedItems)
+                        }
+                        break
+                    case "x":
+                        if (selectedItems.length > 0) {
+                            e.preventDefault()
+                            onCut(selectedItems)
+                        }
+                        break
+                    case "v":
+                        if (clipboard && selectedItems.length === 1) {
+                            const selectedItem = findItemById(structure, selectedItems[0])
+                            if (selectedItem?.type === "folder") {
+                                e.preventDefault()
+                                onPaste(selectedItems[0])
+                            }
+                        }
+                        break
+                    case "a":
+                        e.preventDefault()
+                        // Select all items at root level
+                        if (structure.children) {
+                            setSelectedItems(structure.children.map((child) => child.id))
+                        }
+                        break
+                }
+            } else if (e.key === "Delete" && selectedItems.length > 0) {
+                e.preventDefault()
+                onDelete(selectedItems)
+            }
         }
 
-        setShowExportDialog(false)
-    }
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+    }, [selectedItems, clipboard, currentEditingId, structure, findItemById, onCopy, onCut, onPaste, onDelete])
 
-    // Import
-    const onImport = (id: string) => {
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = '.json'
-        input.onchange = async (e: Event) => {
-            const target = e.target as HTMLInputElement
-            const file = target.files?.[0]
-            if (!file) return
+    // Enhanced Drag and drop handlers
+    const handleDragStart = useCallback(
+        (e: React.DragEvent, id: string) => {
+            // If the dragged item is not selected, select it
+            if (!selectedItems.includes(id)) {
+                setSelectedItems([id])
+            }
+
+            const dragData = {
+                itemIds: selectedItems.includes(id) ? selectedItems : [id],
+                sourceParentId: findParentById(structure, id)?.id || null,
+            }
+
+            e.dataTransfer.setData("text/plain", JSON.stringify(dragData))
+            e.dataTransfer.effectAllowed = "move"
+        },
+        [selectedItems, findParentById, structure],
+    )
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = "move"
+    }, [])
+
+    const handleDrop = useCallback(
+        (e: React.DragEvent, targetId: string, position: "before" | "after" | "inside" = "inside") => {
+            e.preventDefault()
 
             try {
-                const text = await file.text()
-                const importedData = JSON.parse(text) as FileFolderItem
+                const dragData = JSON.parse(e.dataTransfer.getData("text/plain"))
+                const { itemIds, sourceParentId } = dragData
 
-                setStructure(prev => {
-                    const newStructure = JSON.parse(JSON.stringify(prev))
-                    const parent = findItem(id, [newStructure])
-                    if (parent && parent.type === 'folder') {
-                        if (!parent.children) parent.children = []
-                        parent.children.push({
-                            ...importedData,
-                            id: `${importedData.type}-${Date.now()}`
-                        })
+                if (itemIds.includes(targetId)) return // Can't drop on itself
+
+                const targetItem = findItemById(structure, targetId)
+                if (!targetItem) return
+
+                const draggedItems = itemIds.map((id: string) => findItemById(structure, id)).filter(Boolean) as FileItem[]
+                if (draggedItems.length === 0) return
+
+                let targetParentId: string
+                let insertIndex = -1
+
+                if (position === "inside" && targetItem.type === "folder") {
+                    // Drop inside folder
+                    targetParentId = targetId
+                } else {
+                    // Drop before/after item (reordering)
+                    const targetParent = findParentById(structure, targetId)
+                    if (!targetParent) return
+
+                    targetParentId = targetParent.id
+                    const targetIndex = targetParent.children?.findIndex((child) => child.id === targetId) ?? -1
+
+                    if (targetIndex === -1) return
+
+                    insertIndex = position === "before" ? targetIndex : targetIndex + 1
+                }
+
+                const targetParent = findItemById(structure, targetParentId)
+                if (!targetParent || !targetParent.children) return
+
+                // Check if moving within the same parent
+                const isSameParent = sourceParentId === targetParentId
+
+                updateStructure((prev) => {
+                    let newStructure = { ...prev }
+
+                    // Remove items from source
+                    if (!isSameParent) {
+                        newStructure = removeItemsFromStructure(newStructure, itemIds)
                     }
+
+                    // Add items to target
+                    newStructure = addItemsToStructure(
+                        newStructure,
+                        targetParentId,
+                        draggedItems,
+                        insertIndex,
+                        isSameParent ? itemIds : [],
+                        targetParent.children || [],
+                        isSameParent,
+                    )
+
                     return newStructure
                 })
+
+                // Open target folder if dropping inside
+                if (position === "inside" && targetItem.type === "folder") {
+                    setOpenFolders((prev) => new Set([...prev, targetId]))
+                }
+
+                draggedItems.map((item) => item.name).join(", ")
+
             } catch (error) {
-                console.error('Error importing file:', error)
+                console.error("Drop error:", error)
+                toast.error("Failed to move items")
             }
-        }
-        input.click()
-    }
+        },
+        [structure, findItemById, findParentById, updateStructure],
+    )
 
-    // Handle Error
-    const handleError = (message: string) => {
-        toast.error(message)
-    }
-
-    // Clear Structure
-    const handleClearStructure = () => {
-        setStructure(INITIAL_STRUCTURE)
-        handleClearFramework()
-        localStorage.removeItem('folderStructure')
-        toast.success('Structure cleared successfully')
-        setShowClearDialog(false)
-    }
-
-    // Get All Items
-    const getAllItems = useCallback((items: FileFolderItem[] = [structure]): string[] => {
-        let result: string[] = []
-        for (const item of items) {
-            result.push(item.id)
+    // Helper functions for drag and drop
+    const removeItemsFromStructure = useCallback((structure: FileItem, itemIds: string[]): FileItem => {
+        const removeFromItem = (item: FileItem): FileItem => {
             if (item.children) {
-                result = result.concat(getAllItems(item.children))
-            }
-        }
-        return result
-    }, [structure])
-
-    // Drag Start
-    const handleDragStart = (e: React.DragEvent, item: FileFolderItem, index: number, parentId: string | null) => {
-        e.stopPropagation()
-        setDraggedItem(item)
-        setDraggedItemParentId(parentId)
-        e.dataTransfer.setData('text/plain', item.id)
-        e.dataTransfer.effectAllowed = 'move'
-    }
-
-    // Drag Over
-    const handleDragOver = (e: React.DragEvent, item: FileFolderItem, index: number, parentId: string | null) => {
-        e.preventDefault()
-        e.stopPropagation()
-        
-        if (!draggedItem) return
-        
-        // Prevent dropping onto itself or its descendants
-        if (item.id === draggedItem.id || isDescendant(item, draggedItem)) {
-            e.dataTransfer.dropEffect = 'none'
-            return
-        }
-
-        // Allow dropping into folders or between items in the same folder
-        const isSameFolder = parentId === draggedItemParentId
-        
-        // Allow dropping if it's a folder or if we're reordering in the same folder
-        if (item.type === 'folder' || isSameFolder) {
-            e.dataTransfer.dropEffect = 'move'
-        } else {
-            e.dataTransfer.dropEffect = 'none'
-        }
-    }
-
-    // Drop
-    const handleDrop = (e: React.DragEvent, targetItem: FileFolderItem, targetIndex: number, targetParentId: string | null) => {
-        e.preventDefault()
-        e.stopPropagation()
-        
-        if (!draggedItem || draggedItemParentId === null) return
-
-        const isSameFolder = targetParentId === draggedItemParentId
-
-        // Validate drop target
-        if (targetItem.id === draggedItem.id || isDescendant(targetItem, draggedItem)) {
-            toast.error('Cannot drop an item into itself or its descendants')
-            return
-        }
-
-        // Check if we're moving between folders
-        if (!isSameFolder) {
-            // Target must be a folder for moving between folders
-            if (targetItem.type !== 'folder') {
-                toast.error('Can only drop items into folders')
-                return
-            }
-
-            // Check for duplicate names in the target folder
-            if (checkDuplicateName(targetItem.id, draggedItem.name)) {
-                toast.error('An item with this name already exists in the target folder')
-                return
-            }
-        }
-
-        setStructure((prev) => {
-            const newStructure = JSON.parse(JSON.stringify(prev))
-            
-            // Find and remove the dragged item from its original location
-            const removeFromParent = (items: FileFolderItem[]): boolean => {
-                const index = items.findIndex(item => item.id === draggedItem.id)
-                if (index !== -1) {
-                    items.splice(index, 1)
-                    return true
+                return {
+                    ...item,
+                    children: item.children.filter((child) => !itemIds.includes(child.id)).map(removeFromItem),
                 }
-                for (const item of items) {
-                    if (item.children && removeFromParent(item.children)) {
-                        return true
-                    }
-                }
-                return false
             }
+            return item
+        }
+        return removeFromItem(structure)
+    }, [])
 
-            // Handle removal from original location
-            const originalParent = findItem(draggedItemParentId, [newStructure])
-            if (originalParent?.children) {
-                removeFromParent(originalParent.children)
-            }
+    const addItemsToStructure = useCallback(
+        (
+            structure: FileItem,
+            targetParentId: string,
+            draggedItems: FileItem[],
+            insertIndex: number,
+            excludeIds: string[],
+            targetChildren: FileItem[],
+            isSameParent = false,
+        ): FileItem => {
+            const addToItem = (item: FileItem): FileItem => {
+                if (item.id === targetParentId) {
+                    let newChildren = [...(item.children || [])]
 
-            // Handle insertion at new location
-            if (isSameFolder) {
-                // Reordering within the same folder
-                const parent = findItem(targetParentId || 'root', [newStructure])
-                if (parent?.children) {
-                    const currentIndex = parent.children.findIndex(child => child.id === draggedItem.id)
-                    if (currentIndex !== -1) {
-                        parent.children.splice(currentIndex, 1)
+                    // Remove items that are being moved within the same parent
+                    if (excludeIds.length > 0) {
+                        newChildren = newChildren.filter((child) => !excludeIds.includes(child.id))
                     }
-                    const adjustedIndex = currentIndex < targetIndex ? targetIndex - 1 : targetIndex
-                    if (adjustedIndex >= 0 && adjustedIndex <= parent.children.length) {
-                        parent.children.splice(adjustedIndex, 0, draggedItem)
+
+                    // Create new items with appropriate names
+                    const itemsToAdd = draggedItems.map((draggedItem) => ({
+                        ...draggedItem,
+                        id: `${draggedItem.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        name: generateUniqueName(
+                            targetChildren,
+                            draggedItem.name,
+                            draggedItem.name, // Pass original name
+                            isSameParent, // Pass whether moving to same parent
+                        ),
+                    }))
+
+                    if (insertIndex >= 0 && insertIndex <= newChildren.length) {
+                        // Insert at specific position
+                        newChildren.splice(insertIndex, 0, ...itemsToAdd)
                     } else {
-                        parent.children.push(draggedItem)
+                        // Add to end
+                        newChildren.push(...itemsToAdd)
+                    }
+
+                    return {
+                        ...item,
+                        children: newChildren,
                     }
                 }
-            } else {
-                // Add to target folder
-                const target = findItem(targetItem.id, [newStructure])
-                if (target?.type === 'folder') {
-                    if (!target.children) {
-                        target.children = []
-                    }
-                    if (targetIndex >= 0 && targetIndex <= target.children.length) {
-                        target.children.splice(targetIndex, 0, draggedItem)
-                    } else {
-                        target.children.push(draggedItem)
+                if (item.children) {
+                    return {
+                        ...item,
+                        children: item.children.map(addToItem),
                     }
                 }
+                return item
             }
-
-            return newStructure
-        })
-        
-        // Clear drag state
-        setDraggedItem(null)
-        setDraggedItemParentId(null)
-    }
-
-    // Is Descendant
-    const isDescendant = (parent: FileFolderItem, child: FileFolderItem): boolean => {
-        if (!parent.children) return false
-        if (parent.children.some(item => item.id === child.id)) return true
-        return parent.children.some(item => isDescendant(item, child))
-    }
-
-    // Handle framework selection
-    const handleFrameworkSelect = (newStructure: FileFolderItem) => {
-        setStructure(newStructure)
-        const frameworkName = newStructure.name.split(' ')[0]
-        setSelectedFramework(frameworkName)
-        // Extract version from structure or pass it as parameter if needed
-        const version = newStructure.name.includes('v') ? newStructure.name.split('v')[1] : null
-        setSelectedVersion(version)
-        
-        // Save to localStorage
-        localStorage.setItem('selectedFramework', frameworkName)
-        if (version) {
-            localStorage.setItem('selectedVersion', version)
-        }
-    }
-
-    // Clear framework selection
-    const handleClearFramework = () => {
-        setSelectedFramework(null)
-        setSelectedVersion(null)
-        localStorage.removeItem('selectedFramework')
-        localStorage.removeItem('selectedVersion')
-    }
+            return addToItem(structure)
+        },
+        [],
+    )
 
     return {
+        // State
         structure,
         openFolders,
         selectedItems,
@@ -681,17 +607,16 @@ export const useFolderStructure = () => {
         showClearDialog,
         showExportDialog,
         showShortcutsDialog,
-        currentExportItem,
         selectedFramework,
-        selectedVersion,
+
+        // Setters
         setOpenFolders,
-        setSelectedItems,
         setCurrentEditingId,
         setShowClearDialog,
         setShowExportDialog,
         setShowShortcutsDialog,
-        findItem,
-        findParent,
+
+        // Handlers
         onCopy,
         onCut,
         onDelete,
@@ -708,6 +633,5 @@ export const useFolderStructure = () => {
         handleDragOver,
         handleDrop,
         handleFrameworkSelect,
-        handleClearFramework,
     }
 }

@@ -1,129 +1,107 @@
-import React from 'react'
+"use client"
+
+import { Button } from "@/components/ui/button"
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { DialogProps } from '@/types/interfaces'
-import {
-    FileText,
-    FileJson,
-    Keyboard
-} from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import type { DialogProps } from "@/types/interfaces"
 
-// Clear Dialog
-export const ClearDialog: React.FC<DialogProps> = ({ open, onOpenChange, onClear }) => (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Clear Structure</DialogTitle>
-                <DialogDescription>
-                    Are you sure you want to clear the entire structure? This action cannot be undone.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="sm:justify-end">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="sm:w-auto w-full">
+export function ClearDialog({ open, onOpenChange, onClear }: DialogProps) {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Clear Structure</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to clear the entire folder structure? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
                         Cancel
                     </Button>
-                    <Button variant="destructive" onClick={onClear} className="sm:w-auto w-full">
+                    <Button variant="destructive" onClick={onClear}>
                         Clear All
                     </Button>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-)
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
-// Export Dialog
-export const ExportDialog: React.FC<DialogProps> = ({ open, onOpenChange, onExport }) => (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle>Export Structure</DialogTitle>
-                <DialogDescription>
-                    Choose the format to export your folder structure.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="flex flex-col gap-4">
-                    <Button
-                        onClick={() => onExport?.('tree')}
-                        className="flex items-center gap-2 justify-start"
-                        variant="outline"
-                    >
-                        <FileText className="w-4 h-4" />
-                        Export as Tree Structure (.txt)
+export function ExportDialog({ open, onOpenChange, onExport }: DialogProps) {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Export Structure</DialogTitle>
+                    <DialogDescription>Choose the format to export your folder structure.</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4 py-4">
+                    <Button variant="outline" onClick={() => onExport?.("json")} className="h-20 flex-col gap-2">
+                        <span className="font-semibold">JSON</span>
+                        <span className="text-xs text-muted-foreground">Machine readable format</span>
                     </Button>
-                    <Button
-                        onClick={() => onExport?.('json')}
-                        className="flex items-center gap-2 justify-start"
-                        variant="outline"
-                    >
-                        <FileJson className="w-4 h-4" />
-                        Export as JSON (.json)
+                    <Button variant="outline" onClick={() => onExport?.("text")} className="h-20 flex-col gap-2">
+                        <span className="font-semibold">Text</span>
+                        <span className="text-xs text-muted-foreground">Human readable tree</span>
                     </Button>
                 </div>
-            </div>
-            <DialogFooter>
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                    Cancel
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-)
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
-// Shortcuts Dialog
-export const ShortcutsDialog: React.FC<DialogProps> = ({ open, onOpenChange }) => (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                    <Keyboard className="w-5 h-5" />
-                    Keyboard Shortcuts
-                </DialogTitle>
-                <DialogDescription>
-                    Use these keyboard shortcuts to work more efficiently
-                </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-                <div className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm">Copy</span>
-                        <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-                            ⌘/Ctrl + C
-                        </kbd>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm">Cut</span>
-                        <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-                            ⌘/Ctrl + X
-                        </kbd>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm">Paste</span>
-                        <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-                            ⌘/Ctrl + V
-                        </kbd>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm">Delete</span>
-                        <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:text-gray-100 dark:bg-gray-800 dark:border-gray-700">
-                            Delete
-                        </kbd>
-                    </div>
+export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+    const shortcuts = [
+        { key: "Ctrl/Cmd + C", action: "Copy selected items" },
+        { key: "Ctrl/Cmd + X", action: "Cut selected items" },
+        { key: "Ctrl/Cmd + V", action: "Paste items (in folder)" },
+        { key: "Ctrl/Cmd + A", action: "Select all items" },
+        { key: "Delete", action: "Delete selected items" },
+        { key: "F2", action: "Rename selected item" },
+        { key: "Double Click", action: "Rename item" },
+        { key: "Ctrl/Cmd + Click", action: "Multi-select items" },
+        { key: "Shift + Click", action: "Range select items" },
+        { key: "Drag & Drop", action: "Move items to folder" },
+    ]
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Keyboard Shortcuts</DialogTitle>
+                    <DialogDescription>Quick actions to boost your productivity</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    {shortcuts.map((shortcut, index) => (
+                        <div key={index}>
+                            <div className="flex items-center justify-between py-2">
+                                <span className="text-sm">{shortcut.action}</span>
+                                <Badge variant="secondary" className="font-mono text-xs">
+                                    {shortcut.key}
+                                </Badge>
+                            </div>
+                            {index < shortcuts.length - 1 && <Separator />}
+                        </div>
+                    ))}
                 </div>
-            </div>
-            <DialogFooter>
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                    Close
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-)
+                <DialogFooter>
+                    <Button onClick={() => onOpenChange(false)}>Got it</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}

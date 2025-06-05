@@ -1,6 +1,6 @@
 import { FILE_ICONS } from "./constants"
 import { File } from "lucide-react"
-import type { FileItem, FileIcon, FileFolderItem } from "@/types/interfaces"
+import type { FileItem, FileIcon } from "@/types/interfaces"
 
 export const formatFileSize = (bytes: number): string => {
     if (!bytes) return "0 B"
@@ -26,72 +26,126 @@ export const createDefaultStructure = (): FileItem => {
         id: "root",
         name: "project",
         type: "folder",
-        children: [
-            {
-                id: "src",
-                name: "src",
-                type: "folder",
-                children: [
-                    {
-                        id: "components",
-                        name: "components",
-                        type: "folder",
-                        children: [],
-                    },
-                    {
-                        id: "pages",
-                        name: "pages",
-                        type: "folder",
-                        children: [],
-                    },
-                    {
-                        id: "utils",
-                        name: "utils",
-                        type: "folder",
-                        children: [],
-                    },
-                ],
-            },
-            {
-                id: "package-json",
-                name: "package.json",
-                type: "file",
-            },
-            {
-                id: "readme",
-                name: "README.md",
-                type: "file",
-            },
-        ],
+        children: [],
     }
 }
 
-export const generateStructureDisplay = (structure: FileItem, prefix = "", isLast = true): string => {
+export const generateStructureDisplay = (structure: FileItem, indent = ""): string => {
     let result = ""
 
     if (structure.id === "root") {
+        // Root folder
         result += `${structure.name}/\n`
         if (structure.children) {
-            structure.children.forEach((child, index) => {
-                const isLastChild = index === structure.children!.length - 1
-                result += generateStructureDisplay(child, "", isLastChild)
+            structure.children.forEach((child) => {
+                result += generateStructureDisplay(child, indent + "  ")
             })
         }
     } else {
-        const connector = isLast ? "└── " : "├── "
-        const icon = structure.type === "folder" ? "📁 " : "📄 "
-        result += `${prefix}${connector}${icon}${structure.name}\n`
-
-        if (structure.children && structure.children.length > 0) {
-            const newPrefix = prefix + (isLast ? "    " : "│   ")
-            structure.children.forEach((child, index) => {
-                const isLastChild = index === structure.children!.length - 1
-                result += generateStructureDisplay(child, newPrefix, isLastChild)
-            })
+        // Regular files and folders
+        if (structure.type === "folder") {
+            result += `${indent}${structure.name}/\n`
+            if (structure.children) {
+                structure.children.forEach((child) => {
+                    result += generateStructureDisplay(child, indent + "  ")
+                })
+            }
+        } else {
+            result += `${indent}${structure.name}\n`
         }
     }
 
     return result
+}
+
+/**
+ * Generate a numbered name (e.g., "file (1).txt", "folder (1)")
+ */
+const generateNumberedName = (existingNames: string[], baseName: string): string => {
+    // Check if the name has an extension
+    const lastDotIndex = baseName.lastIndexOf(".")
+    const hasExtension = lastDotIndex > 0 && lastDotIndex < baseName.length - 1
+
+    let nameWithoutExt: string
+    let extension: string
+
+    if (hasExtension) {
+        nameWithoutExt = baseName.substring(0, lastDotIndex)
+        extension = baseName.substring(lastDotIndex)
+    } else {
+        nameWithoutExt = baseName
+        extension = ""
+    }
+
+    let counter = 1
+    let uniqueName: string
+
+    do {
+        if (hasExtension) {
+            uniqueName = `${nameWithoutExt} (${counter})${extension}`
+        } else {
+            uniqueName = `${nameWithoutExt} (${counter})`
+        }
+        counter++
+    } while (existingNames.includes(uniqueName.toLowerCase()))
+
+    return uniqueName
+}
+
+/**
+ * Generate unique name for new items (files/folders created by user)
+ * This function will ALWAYS add numbers if there's a conflict
+ */
+export const generateUniqueNameForNewItem = (existingItems: FileItem[], baseName: string): string => {
+    console.log("generateUniqueNameForNewItem called with:", {
+        baseName,
+        existingItems: existingItems.map((i) => i.name),
+    })
+
+    const existingNames = existingItems.map((item) => item.name.toLowerCase())
+    console.log("Existing names (lowercase):", existingNames)
+
+    // If no conflict, return the base name
+    if (!existingNames.includes(baseName.toLowerCase())) {
+        console.log("No conflict, returning base name:", baseName)
+        return baseName
+    }
+
+    // There's a conflict, generate numbered name
+    console.log("Conflict detected, generating numbered name")
+    const result = generateNumberedName(existingNames, baseName)
+    console.log("Generated unique name:", result)
+    return result
+}
+
+/**
+ * Generate a unique name for a file or folder (for move/drag operations)
+ * @param existingItems - Array of existing items in the target location
+ * @param baseName - The desired name
+ * @param originalName - The original name (for move operations)
+ * @param isMovingToSameParent - Whether this is a move within the same parent
+ * @returns A unique name
+ */
+export const generateUniqueName = (
+    existingItems: FileItem[],
+    baseName: string,
+    originalName?: string,
+    isMovingToSameParent = false,
+): string => {
+    // If moving to the same parent and the name is the same as original, keep it
+    if (isMovingToSameParent && originalName && originalName === baseName) {
+        return baseName
+    }
+
+    const existingNames = existingItems.map((item) => item.name.toLowerCase())
+
+    // If no conflict, return the base name
+    if (!existingNames.includes(baseName.toLowerCase())) {
+        return baseName
+    }
+
+    // There's a conflict, so we need to generate a unique name
+    return generateNumberedName(existingNames, baseName)
 }
 
 export const exportStructure = (structure: FileItem, format: "json" | "text") => {
@@ -134,33 +188,6 @@ export const importStructure = (content: string): FileItem => {
         throw new Error("Failed to parse imported structure")
     }
 }
-
-export const formatStructureForDisplay = (structure: FileFolderItem, level: number = 0): string => {
-    const indent = '  '.repeat(level)
-    let output = `${indent}${structure.name}/\n`
-    
-    if (structure.children) {
-        structure.children.forEach(child => {
-            if (child.type === 'folder') {
-                output += formatStructureForDisplay(child, level + 1)
-            } else {
-                output += `${indent}  ${child.name}\n`
-            }
-        })
-    }
-    
-    return output
-}
-
-export const deepCloneItem = (item: FileFolderItem): FileFolderItem => {
-    const clone = { ...item }
-    if (item.children) {
-        clone.children = item.children.map(child => deepCloneItem(child))
-    }
-    // Generate new IDs for cloned items
-    clone.id = `${clone.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    return clone
-} 
 
 export const formatTreeStructure = (structure: FileItem): string => {
     return generateStructureDisplay(structure)

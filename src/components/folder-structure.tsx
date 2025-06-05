@@ -1,19 +1,19 @@
 "use client"
-
-import React from 'react'
 import { Button } from "@/components/ui/button"
-import {
-    Keyboard
-} from "lucide-react"
-import FileFolder from './folder-structure/file-folder'
-import ProfileCard from './folder-structure/profile-card'
-import { ModeToggle } from './mode-toggle'
-import { ClearDialog, ExportDialog, ShortcutsDialog } from './folder-structure/dialogs'
-import { useFolderStructure } from './folder-structure/use-folder-structure'
-import FrameworkStructure from './framework-structure'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Keyboard } from "lucide-react"
+import FileFolder from "./folder-structure/file-folder"
+import ProfileCard from "./folder-structure/profile-card"
+import { ModeToggle } from "./mode-toggle"
+import { ClearDialog, ExportDialog, ShortcutsDialog } from "./folder-structure/dialogs"
+import { useFolderStructure } from "./folder-structure/use-folder-structure"
+import FrameworkStructure from "./framework-structure"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 
-const FolderStructureView = () => {
+interface FolderStructureBuilderProps {
+    tabId: string
+}
+
+const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
     const {
         structure,
         openFolders,
@@ -46,7 +46,7 @@ const FolderStructureView = () => {
         handleDragOver,
         handleDrop,
         handleFrameworkSelect,
-    } = useFolderStructure()
+    } = useFolderStructure(tabId)
 
     return (
         <div className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden">
@@ -70,21 +70,20 @@ const FolderStructureView = () => {
                                     <ProfileCard />
                                 </div>
                             </div>
-                            <div className='flex gap-2 items-center'>
+                            <div className="flex gap-2 items-center">
                                 {/* Framework Selection */}
-                                <FrameworkStructure 
+                                <FrameworkStructure
                                     onFrameworkSelect={handleFrameworkSelect}
-                                    selectedFramework={selectedFramework ? {
-                                        framework: selectedFramework
-                                    } : null}
+                                    selectedFramework={
+                                        selectedFramework
+                                            ? {
+                                                framework: selectedFramework,
+                                            }
+                                            : null
+                                    }
                                 />
                                 <ModeToggle />
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="gap-2"
-                                    onClick={() => setShowShortcutsDialog(true)}
-                                >
+                                <Button variant="ghost" size="sm" className="gap-2" onClick={() => setShowShortcutsDialog(true)}>
                                     <Keyboard className="w-4 h-4" />
                                 </Button>
                                 <Button
@@ -135,24 +134,13 @@ const FolderStructureView = () => {
                 </div>
             </div>
 
-            <ClearDialog
-                open={showClearDialog}
-                onOpenChange={setShowClearDialog}
-                onClear={handleClearStructure}
-            />
+            <ClearDialog open={showClearDialog} onOpenChange={setShowClearDialog} onClear={handleClearStructure} />
 
-            <ExportDialog
-                open={showExportDialog}
-                onOpenChange={setShowExportDialog}
-                onExport={handleExport}
-            />
+            <ExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} onExport={handleExport} />
 
-            <ShortcutsDialog
-                open={showShortcutsDialog}
-                onOpenChange={setShowShortcutsDialog}
-            />
+            <ShortcutsDialog open={showShortcutsDialog} onOpenChange={setShowShortcutsDialog} />
         </div>
     )
 }
 
-export default FolderStructureView
+export default FolderStructureBuilder

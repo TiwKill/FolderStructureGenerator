@@ -1,6 +1,4 @@
 "use client"
-
-import * as React from "react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -12,17 +10,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Code } from "lucide-react"
 import { getFrameworkStructure } from "./folder-structure/framework-templates"
-import { FrameworkStructureProps } from "@/types/interfaces"
+import type { FrameworkStructureProps } from "@/types/interfaces"
 import { frameworks } from "./folder-structure/constants"
 import { toast } from "sonner"
 
 export default function FrameworkStructure({ onFrameworkSelect, selectedFramework }: FrameworkStructureProps) {
     const handleFrameworkSelect = (framework: string) => {
         try {
+            console.log("Selecting framework:", framework) // Debug log
             const structure = getFrameworkStructure(framework)
+            console.log("Generated structure:", structure) // Debug log
             onFrameworkSelect?.(structure)
         } catch (error) {
-            toast.error("Error generating framework structure")
+            console.error("Framework selection error:", error) // Debug log
+            toast.error(`Failed to load ${framework} template`)
         }
     }
 
@@ -30,18 +31,16 @@ export default function FrameworkStructure({ onFrameworkSelect, selectedFramewor
         <div className="w-full">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost">
+                    <Button variant="ghost" size="sm">
                         <div className={`flex items-center ${selectedFramework?.framework ? "gap-2" : ""}`}>
                             <Code className="h-4 w-4" />
-                            <span>
-                                {selectedFramework?.framework}
-                            </span>
+                            <span>{selectedFramework?.framework}</span>
                         </div>
                     </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent className="w-64" align="start">
-                    <DropdownMenuLabel>Choose Framework</DropdownMenuLabel>
+                    <DropdownMenuLabel>Choose Framework Template</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {frameworks.map((framework) => (
                         <DropdownMenuItem
