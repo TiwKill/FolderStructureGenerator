@@ -86,16 +86,7 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="
-            max-w-md 
-            w-[calc(100%-2rem)] 
-            mx-4 
-            sm:mx-0 
-            my-4 
-            sm:my-0
-            max-h-[90vh]
-            overflow-hidden
-          ">
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Keyboard Shortcuts</DialogTitle>
                     <DialogDescription>Quick actions to boost your productivity</DialogDescription>
