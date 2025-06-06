@@ -9,7 +9,7 @@ export interface FileItem {
 }
 
 export interface ClipboardItem {
-    item: FileItem
+    items: FileItem[] // เปลี่ยนจาก item: FileItem เป็น items: FileItem[]
     operation: "copy" | "cut"
 }
 

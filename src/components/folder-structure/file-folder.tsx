@@ -20,6 +20,7 @@ import {
     ClipboardPaste,
     Download,
     Upload,
+    X,
 } from "lucide-react"
 import { getFileIcon } from "./utils"
 import type { FileItem, ClipboardItem } from "@/types/interfaces"
@@ -49,6 +50,8 @@ interface FileFolderProps {
     onDrop: (e: React.DragEvent, targetId: string, position?: "before" | "after" | "inside") => void
     index: number
     parentId: string | null
+    selectionOrder: string[]
+    onClearSelection?: () => void
 }
 
 const FileFolder: React.FC<FileFolderProps> = ({
@@ -76,6 +79,8 @@ const FileFolder: React.FC<FileFolderProps> = ({
     onDrop,
     index,
     parentId,
+    selectionOrder,
+    onClearSelection,
 }) => {
     const [editName, setEditName] = useState<string>(item.name)
     const [showInfo, setShowInfo] = useState<boolean>(false)
@@ -238,6 +243,9 @@ const FileFolder: React.FC<FileFolderProps> = ({
             case "delete":
                 onDelete(targetIds)
                 break
+            case "clear-selection":
+                onClearSelection?.()
+                break
         }
     }
 
@@ -255,6 +263,19 @@ const FileFolder: React.FC<FileFolderProps> = ({
                 return ""
         }
     }
+
+    // Fixed selection order number calculation
+    const getSelectionOrderNumber = () => {
+        if (selectedItems.length <= 1 || !selectedItems.includes(item.id)) {
+            return null
+        }
+
+        // Find the index in selectionOrder array and add 1 for display
+        const orderIndex = selectionOrder.indexOf(item.id)
+        return orderIndex >= 0 ? orderIndex + 1 : null
+    }
+
+    const selectionOrderNumber = getSelectionOrderNumber()
 
     return (
         <div className="relative group rounded-lg">
@@ -343,9 +364,10 @@ const FileFolder: React.FC<FileFolderProps> = ({
                         {showInfo && !isEditing && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate max-w-32">{currentPath}</span>
                         )}
-                        {selectedItems.length > 1 && selectedItems.includes(item.id) && (
-                            <span className="text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5 ml-2">
-                                {selectedItems.length}
+                        {/* แสดงหมายเลขอันดับเฉพาะเมื่อเลือกมากกว่า 1 รายการ */}
+                        {selectionOrderNumber && (
+                            <span className="text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5 ml-2 min-w-[20px] text-center font-medium">
+                                {selectionOrderNumber}
                             </span>
                         )}
                     </div>
@@ -377,6 +399,7 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                 className={`gap-2 ${!clipboard ? "opacity-50" : ""}`}
                             >
                                 <ClipboardPaste className="w-4 h-4" /> Paste
+                                {clipboard && clipboard.items.length > 1 && ` (${clipboard.items.length})`}
                             </ContextMenuItem>
                             <ContextMenuSeparator />
                             <ContextMenuItem onClick={handleImportClick} className="gap-2">
@@ -404,6 +427,14 @@ const FileFolder: React.FC<FileFolderProps> = ({
                     >
                         <Trash2 className="w-4 h-4" /> Delete {selectedItems.length > 1 ? `(${selectedItems.length})` : ""}
                     </ContextMenuItem>
+                    {selectedItems.length > 1 && (
+                        <>
+                            <ContextMenuSeparator />
+                            <ContextMenuItem onClick={() => handleContextMenuAction("clear-selection")} className="gap-2">
+                                <X className="w-4 h-4" /> Clear Selection ({selectedItems.length})
+                            </ContextMenuItem>
+                        </>
+                    )}
                 </ContextMenuContent>
             </ContextMenu>
 
@@ -436,6 +467,8 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                 onDrop={onDrop}
                                 index={childIndex}
                                 parentId={item.id}
+                                selectionOrder={selectionOrder}
+                                onClearSelection={onClearSelection}
                             />
                         </React.Fragment>
                     ))}

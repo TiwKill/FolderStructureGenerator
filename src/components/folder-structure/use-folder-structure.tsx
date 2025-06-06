@@ -8,6 +8,7 @@ import type { FileItem, ClipboardItem } from "@/types/interfaces"
 import {
     createDefaultStructure,
     generateStructureDisplay,
+    generateTreeView,
     exportStructure,
     importStructure,
     generateUniqueName,
@@ -21,6 +22,7 @@ export const useFolderStructure = (tabId?: string) => {
     const [structure, setStructure] = useState<FileItem>(createDefaultStructure())
     const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["root"]))
     const [selectedItems, setSelectedItems] = useState<string[]>([])
+    const [selectionOrder, setSelectionOrder] = useState<string[]>([])
     const [clipboard, setClipboard] = useState<ClipboardItem | null>(null)
     const [currentEditingId, setCurrentEditingId] = useState<string | null>(null)
     const [selectedFramework, setSelectedFramework] = useState<string | null>(null)
@@ -54,17 +56,44 @@ export const useFolderStructure = (tabId?: string) => {
                 const storageKey = getStorageKey()
                 const savedData = localStorage.getItem(storageKey)
 
+                console.log("Loading from localStorage:", { storageKey, hasData: !!savedData })
+
                 if (savedData) {
                     const parsedData = JSON.parse(savedData)
+
+                    console.log("Parsed data:", {
+                        hasStructure: !!parsedData.structure,
+                        openFoldersCount: parsedData.openFolders?.length || 0,
+                        selectedItemsCount: parsedData.selectedItems?.length || 0,
+                        selectionOrderCount: parsedData.selectionOrder?.length || 0,
+                        framework: parsedData.selectedFramework,
+                    })
+
+                    // Load structure
                     if (parsedData.structure) {
                         setStructure(parsedData.structure)
                     }
+
+                    // Load open folders state
                     if (parsedData.openFolders && Array.isArray(parsedData.openFolders)) {
                         setOpenFolders(new Set(parsedData.openFolders))
                     }
+
+                    // Load selected framework
                     if (parsedData.selectedFramework) {
                         setSelectedFramework(parsedData.selectedFramework)
                     }
+
+                    // Load selection state (optional - usually we don't persist selection)
+                    if (parsedData.selectedItems && Array.isArray(parsedData.selectedItems)) {
+                        setSelectedItems(parsedData.selectedItems)
+                    }
+
+                    if (parsedData.selectionOrder && Array.isArray(parsedData.selectionOrder)) {
+                        setSelectionOrder(parsedData.selectionOrder)
+                    }
+                } else {
+                    console.log("No saved data found, using defaults")
                 }
             } catch (error) {
                 console.error("Error loading structure from localStorage:", error)
@@ -77,9 +106,9 @@ export const useFolderStructure = (tabId?: string) => {
         loadData()
     }, [getStorageKey])
 
-    // Save data to localStorage
+    // Save data to localStorage - แก้ไข dependency array
     const saveToLocalStorage = useCallback(() => {
-        if (typeof window === "undefined") return
+        if (typeof window === "undefined" || isLoading) return
 
         try {
             const storageKey = getStorageKey()
@@ -87,23 +116,37 @@ export const useFolderStructure = (tabId?: string) => {
                 structure,
                 openFolders: Array.from(openFolders),
                 selectedFramework,
+                selectedItems, // Save selection state
+                selectionOrder, // Save selection order
                 lastUpdated: Date.now(),
             }
+
+            console.log("Saving to localStorage:", {
+                storageKey,
+                dataSize: JSON.stringify(dataToSave).length,
+                openFoldersCount: dataToSave.openFolders.length,
+                selectedItemsCount: dataToSave.selectedItems.length,
+                selectionOrderCount: dataToSave.selectionOrder.length,
+            })
+
             localStorage.setItem(storageKey, JSON.stringify(dataToSave))
         } catch (error) {
             console.error("Error saving structure to localStorage:", error)
             toast.error("Failed to save structure")
         }
-    }, [structure, openFolders, selectedFramework, getStorageKey])
+    }, [structure, openFolders, selectedFramework, selectedItems, selectionOrder, getStorageKey, isLoading])
 
-    // Auto-save when structure or openFolders changes
+    // Auto-save when structure, openFolders, or selection changes
     useEffect(() => {
+        // Don't save during initial load
+        if (isLoading) return
+
         const timeoutId = setTimeout(() => {
             saveToLocalStorage()
         }, 300) // Debounce saves
 
         return () => clearTimeout(timeoutId)
-    }, [saveToLocalStorage])
+    }, [structure, openFolders, selectedFramework, selectedItems, selectionOrder, isLoading, saveToLocalStorage])
 
     // Utility functions
     const findItemById = useCallback((items: FileItem, id: string): FileItem | null => {
@@ -134,14 +177,70 @@ export const useFolderStructure = (tabId?: string) => {
         setStructure(updater)
     }, [])
 
-    // Event handlers
-    const handleSelect = useCallback((id: string, isMultiSelect = false) => {
-        setSelectedItems((prev) => {
+    // Fixed selection logic to prevent duplicate entries
+    const handleSelect = useCallback(
+        (id: string, isMultiSelect = false) => {
+            console.log("handleSelect called:", {
+                id,
+                isMultiSelect,
+                currentSelected: selectedItems,
+                currentOrder: selectionOrder,
+            })
+
             if (isMultiSelect) {
-                return prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+                setSelectedItems((prevSelected) => {
+                    if (prevSelected.includes(id)) {
+                        // Remove from selection
+                        const newSelected = prevSelected.filter((item) => item !== id)
+                        console.log("Removing from selected:", { id, newSelected })
+
+                        // Also update selection order
+                        setSelectionOrder((prevOrder) => {
+                            const newOrder = prevOrder.filter((itemId) => itemId !== id)
+                            console.log("Removing from order:", { id, newOrder })
+                            return newOrder
+                        })
+
+                        return newSelected
+                    } else {
+                        // Add to selection
+                        const newSelected = [...prevSelected, id]
+                        console.log("Adding to selected:", { id, newSelected })
+
+                        // Also update selection order
+                        setSelectionOrder((prevOrder) => {
+                            const newOrder = prevOrder.includes(id) ? prevOrder : [...prevOrder, id]
+                            console.log("Adding to order:", { id, newOrder })
+                            return newOrder
+                        })
+
+                        return newSelected
+                    }
+                })
+            } else {
+                // Single select - replace everything
+                console.log("Single select:", { id })
+                setSelectedItems([id])
+                setSelectionOrder([id])
             }
-            return [id]
-        })
+        },
+        [], // Remove dependencies to prevent stale closure
+    )
+
+    // Helper function for select all
+    const selectAllItems = useCallback(() => {
+        if (structure.children) {
+            const allIds = structure.children.map((child) => child.id)
+            setSelectedItems(allIds)
+            setSelectionOrder(allIds)
+            console.log("Select all items:", allIds)
+        }
+    }, [structure])
+
+    // Helper function for clear selection
+    const clearSelection = useCallback(() => {
+        setSelectedItems([])
+        setSelectionOrder([])
     }, [])
 
     const onAdd = useCallback(
@@ -207,6 +306,10 @@ export const useFolderStructure = (tabId?: string) => {
             if (newItemId) {
                 setCurrentEditingId(newItemId)
             }
+
+            if (finalName) {
+                toast.success(`${type === "folder" ? "Folder" : "File"} "${finalName}" created`)
+            }
         },
         [updateStructure],
     )
@@ -231,14 +334,17 @@ export const useFolderStructure = (tabId?: string) => {
                 return deleteFromItem(prev)
             })
 
+            // Update selection state - remove deleted items
             setSelectedItems((prev) => prev.filter((selectedId) => !idsToDelete.includes(selectedId)))
+            setSelectionOrder((prev) => prev.filter((selectedId) => !idsToDelete.includes(selectedId)))
             setOpenFolders((prev) => {
                 const newSet = new Set(prev)
                 idsToDelete.forEach((id) => newSet.delete(id))
                 return newSet
             })
 
-            itemsToDelete.map((item) => item.name).join(", ")
+            const itemNames = itemsToDelete.map((item) => item.name).join(", ")
+            toast.success(`Deleted: ${itemNames}`)
         },
         [structure, findItemById, updateStructure],
     )
@@ -260,6 +366,8 @@ export const useFolderStructure = (tabId?: string) => {
                 }
                 return renameInItem(prev)
             })
+
+            toast.success(`Renamed to "${newName}"`)
         },
         [updateStructure],
     )
@@ -270,8 +378,9 @@ export const useFolderStructure = (tabId?: string) => {
             const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
 
             if (items.length > 0) {
-                setClipboard({ item: items[0], operation: "copy" }) // For now, handle single item
-                items.map((item) => item.name).join(", ")
+                setClipboard({ items, operation: "copy" })
+                const itemNames = items.map((item) => item.name).join(", ")
+                toast.success(`Copied: ${itemNames}`)
             }
         },
         [structure, findItemById],
@@ -283,8 +392,9 @@ export const useFolderStructure = (tabId?: string) => {
             const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
 
             if (items.length > 0) {
-                setClipboard({ item: items[0], operation: "cut" }) // For now, handle single item
-                items.map((item) => item.name).join(", ")
+                setClipboard({ items, operation: "cut" })
+                const itemNames = items.map((item) => item.name).join(", ")
+                toast.success(`Cut: ${itemNames}`)
             }
         },
         [structure, findItemById],
@@ -292,23 +402,23 @@ export const useFolderStructure = (tabId?: string) => {
 
     const onPaste = useCallback(
         (parentId: string) => {
-            if (!clipboard) return
+            if (!clipboard || !clipboard.items.length) return
 
             updateStructure((prev) => {
                 const pasteToItem = (item: FileItem): FileItem => {
                     if (item.id === parentId) {
-                        // Generate unique name using current children
-                        const uniqueName = generateUniqueNameForNewItem(item.children || [], clipboard.item.name)
-
-                        const newItem: FileItem = {
-                            ...clipboard.item,
-                            id: `${clipboard.item.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                            name: uniqueName,
-                        }
+                        const newItems = clipboard.items.map((clipboardItem) => {
+                            const uniqueName = generateUniqueNameForNewItem(item.children || [], clipboardItem.name)
+                            return {
+                                ...clipboardItem,
+                                id: `${clipboardItem.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                name: uniqueName,
+                            }
+                        })
 
                         return {
                             ...item,
-                            children: [...(item.children || []), newItem],
+                            children: [...(item.children || []), ...newItems],
                         }
                     }
                     if (item.children) {
@@ -323,10 +433,13 @@ export const useFolderStructure = (tabId?: string) => {
             })
 
             if (clipboard.operation === "cut") {
-                onDelete(clipboard.item.id)
+                const idsToDelete = clipboard.items.map((item) => item.id)
+                onDelete(idsToDelete)
             }
 
+            const itemNames = clipboard.items.map((item) => item.name).join(", ")
             setClipboard(null)
+            toast.success(`Pasted: ${itemNames}`)
         },
         [clipboard, updateStructure, onDelete],
     )
@@ -361,6 +474,7 @@ export const useFolderStructure = (tabId?: string) => {
         setStructure(createDefaultStructure())
         setOpenFolders(new Set(["root"]))
         setSelectedItems([])
+        setSelectionOrder([])
         setClipboard(null)
         setSelectedFramework(null)
         setShowClearDialog(false)
@@ -386,7 +500,9 @@ export const useFolderStructure = (tabId?: string) => {
             setSelectedFramework(newStructure.name)
             setOpenFolders(new Set(["root"]))
             setSelectedItems([])
+            setSelectionOrder([])
             setClipboard(null)
+            toast.success(`${newStructure.name} template applied successfully`)
         } catch (error) {
             console.error("Error applying framework structure:", error)
             toast.error("Failed to apply framework template")
@@ -395,22 +511,38 @@ export const useFolderStructure = (tabId?: string) => {
         }
     }, [])
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts - ใช้ helper functions
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (currentEditingId) return // Don't handle shortcuts while editing
+            // Don't handle shortcuts while editing
+            if (currentEditingId) return
+
+            // Don't handle shortcuts if focus is on input elements
+            const activeElement = document.activeElement
+            if (
+                activeElement &&
+                (activeElement.tagName === "INPUT" ||
+                    activeElement.tagName === "TEXTAREA" ||
+                    (activeElement as HTMLElement).contentEditable === "true")
+            ) {
+                return
+            }
+
+            console.log("Keyboard shortcut:", { key: e.key, ctrl: e.ctrlKey, meta: e.metaKey })
 
             if (e.ctrlKey || e.metaKey) {
                 switch (e.key.toLowerCase()) {
                     case "c":
                         if (selectedItems.length > 0) {
                             e.preventDefault()
+                            console.log("Copy shortcut triggered")
                             onCopy(selectedItems)
                         }
                         break
                     case "x":
                         if (selectedItems.length > 0) {
                             e.preventDefault()
+                            console.log("Cut shortcut triggered")
                             onCut(selectedItems)
                         }
                         break
@@ -419,27 +551,47 @@ export const useFolderStructure = (tabId?: string) => {
                             const selectedItem = findItemById(structure, selectedItems[0])
                             if (selectedItem?.type === "folder") {
                                 e.preventDefault()
+                                console.log("Paste shortcut triggered")
                                 onPaste(selectedItems[0])
                             }
                         }
                         break
                     case "a":
                         e.preventDefault()
-                        // Select all items at root level
-                        if (structure.children) {
-                            setSelectedItems(structure.children.map((child) => child.id))
-                        }
+                        console.log("Select all shortcut triggered")
+                        selectAllItems()
                         break
                 }
             } else if (e.key === "Delete" && selectedItems.length > 0) {
                 e.preventDefault()
+                console.log("Delete shortcut triggered")
                 onDelete(selectedItems)
+            } else if (e.key === "F2" && selectedItems.length === 1) {
+                e.preventDefault()
+                console.log("Rename shortcut triggered")
+                setCurrentEditingId(selectedItems[0])
+            } else if (e.key === "Escape") {
+                console.log("Escape shortcut triggered")
+                clearSelection()
             }
         }
 
-        window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [selectedItems, clipboard, currentEditingId, structure, findItemById, onCopy, onCut, onPaste, onDelete])
+        document.addEventListener("keydown", handleKeyDown)
+        return () => document.removeEventListener("keydown", handleKeyDown)
+    }, [
+        selectedItems,
+        clipboard,
+        currentEditingId,
+        structure,
+        findItemById,
+        onCopy,
+        onCut,
+        onPaste,
+        onDelete,
+        setCurrentEditingId,
+        selectAllItems,
+        clearSelection,
+    ])
 
     // Enhanced Drag and drop handlers
     const handleDragStart = useCallback(
@@ -447,6 +599,7 @@ export const useFolderStructure = (tabId?: string) => {
             // If the dragged item is not selected, select it
             if (!selectedItems.includes(id)) {
                 setSelectedItems([id])
+                setSelectionOrder([id])
             }
 
             const dragData = {
@@ -533,7 +686,12 @@ export const useFolderStructure = (tabId?: string) => {
                     setOpenFolders((prev) => new Set([...prev, targetId]))
                 }
 
-                draggedItems.map((item) => item.name).join(", ")
+                const itemNames = draggedItems.map((item) => item.name).join(", ")
+                if (isSameParent && position !== "inside") {
+                    toast.success(`Reordered: ${itemNames}`)
+                } else {
+                    toast.success(`Moved ${itemNames} to "${targetItem.name}"`)
+                }
             } catch (error) {
                 console.error("Drop error:", error)
                 toast.error("Failed to move items")
@@ -618,6 +776,7 @@ export const useFolderStructure = (tabId?: string) => {
         structure,
         openFolders,
         selectedItems,
+        selectionOrder,
         clipboard,
         currentEditingId,
         structureDisplay,
@@ -652,5 +811,7 @@ export const useFolderStructure = (tabId?: string) => {
         handleDragOver,
         handleDrop,
         handleFrameworkSelect,
+        clearSelection,
+        selectAllItems, // เพิ่ม helper function
     }
 }

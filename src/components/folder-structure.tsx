@@ -49,6 +49,8 @@ const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
         handleDragOver,
         handleDrop,
         handleFrameworkSelect,
+        selectionOrder,
+        clearSelection,
     } = useFolderStructure(tabId)
 
     if (isLoading) {
@@ -147,6 +149,8 @@ const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
                                 onDrop={handleDrop}
                                 index={0}
                                 parentId={null}
+                                selectionOrder={selectionOrder}
+                                onClearSelection={clearSelection}
                             />
                         )}
                     </div>
@@ -155,14 +159,16 @@ const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
                 <div className="border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 p-4 overflow-auto lg:w-[35%] flex-shrink-0">
                     <div className="max-w-3xl mx-auto lg:max-w-none space-y-6">
                         {/* Structure Preview (Directory format) */}
-                        <h3 className="text-sm font-medium mb-2">Structure Preview</h3>
-                        {isFrameworkLoading ? (
-                            <StructurePreviewSkeleton />
-                        ) : (
-                            <pre className="text-xs font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded-md break-all">
-                                {structureDisplay}
-                            </pre>
-                        )}
+                        <div>
+                            <h3 className="text-sm font-medium mb-2">Directory Structure</h3>
+                            {isFrameworkLoading ? (
+                                <StructurePreviewSkeleton />
+                            ) : (
+                                <pre className="text-xs font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded-md break-all">
+                                    {structureDisplay}
+                                </pre>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
