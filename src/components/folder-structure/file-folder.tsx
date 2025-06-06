@@ -303,15 +303,15 @@ const FileFolder: React.FC<FileFolderProps> = ({
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                             {item.type === "folder" ? (
                                 isOpen ? (
-                                    <FolderOpen className="w-4 h-4 shrink-0 text-yellow-500" />
+                                    <FolderOpen className={`w-4 h-4 shrink-0 text-yellow-500 ${clipboard?.items.some(i => i.id === item.id) ? 'opacity-50' : ''}`} />
                                 ) : (
-                                    <Folder className="w-4 h-4 shrink-0 text-yellow-500" />
+                                    <Folder className={`w-4 h-4 shrink-0 text-yellow-500 ${clipboard?.items.some(i => i.id === item.id) ? 'opacity-50' : ''}`} />
                                 )
                             ) : (
                                 <span className="w-4 h-4 shrink-0 flex items-center justify-center">
                                     {(() => {
                                         const { icon: Icon, color } = getFileIcon(item.name)
-                                        return <Icon className={`w-4 h-4 shrink-0 ${color}`} />
+                                        return <Icon className={`w-4 h-4 shrink-0 ${color} ${clipboard?.items.some(i => i.id === item.id) ? 'opacity-50' : ''}`} />
                                     })()}
                                 </span>
                             )}
@@ -351,7 +351,7 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                 </>
                             ) : (
                                 <span
-                                    className="text-sm truncate cursor-text px-1 overflow-hidden text-ellipsis"
+                                    className={`text-sm truncate cursor-text px-1 overflow-hidden text-ellipsis ${clipboard?.items.some(i => i.id === item.id) ? 'opacity-50' : ''}`}
                                     onDoubleClick={(e) => {
                                         e.stopPropagation()
                                         startRename()

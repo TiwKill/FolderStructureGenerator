@@ -339,9 +339,7 @@ export default function Home(): React.JSX.Element {
                             {tabs.map((tab) => (
                                 <TabsContent key={tab.id} value={tab.id}>
                                     <div className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 backdrop-blur-sm">
-                                        <div className="h-[700px] relative">
-                                            <FolderStructureBuilder tabId={tab.id} />
-                                        </div>
+                                        <FolderStructureBuilder tabId={tab.id} />
                                     </div>
                                 </TabsContent>
                             ))}

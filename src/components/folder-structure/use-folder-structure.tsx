@@ -8,7 +8,6 @@ import type { FileItem, ClipboardItem } from "@/types/interfaces"
 import {
     createDefaultStructure,
     generateStructureDisplay,
-    generateTreeView,
     exportStructure,
     importStructure,
     generateUniqueName,
@@ -306,10 +305,6 @@ export const useFolderStructure = (tabId?: string) => {
             if (newItemId) {
                 setCurrentEditingId(newItemId)
             }
-
-            if (finalName) {
-                toast.success(`${type === "folder" ? "Folder" : "File"} "${finalName}" created`)
-            }
         },
         [updateStructure],
     )
@@ -344,7 +339,6 @@ export const useFolderStructure = (tabId?: string) => {
             })
 
             const itemNames = itemsToDelete.map((item) => item.name).join(", ")
-            toast.success(`Deleted: ${itemNames}`)
         },
         [structure, findItemById, updateStructure],
     )
@@ -366,8 +360,6 @@ export const useFolderStructure = (tabId?: string) => {
                 }
                 return renameInItem(prev)
             })
-
-            toast.success(`Renamed to "${newName}"`)
         },
         [updateStructure],
     )
@@ -379,8 +371,7 @@ export const useFolderStructure = (tabId?: string) => {
 
             if (items.length > 0) {
                 setClipboard({ items, operation: "copy" })
-                const itemNames = items.map((item) => item.name).join(", ")
-                toast.success(`Copied: ${itemNames}`)
+                items.map((item) => item.name).join(", ")
             }
         },
         [structure, findItemById],
@@ -393,8 +384,7 @@ export const useFolderStructure = (tabId?: string) => {
 
             if (items.length > 0) {
                 setClipboard({ items, operation: "cut" })
-                const itemNames = items.map((item) => item.name).join(", ")
-                toast.success(`Cut: ${itemNames}`)
+                items.map((item) => item.name).join(", ")
             }
         },
         [structure, findItemById],
@@ -439,7 +429,6 @@ export const useFolderStructure = (tabId?: string) => {
 
             const itemNames = clipboard.items.map((item) => item.name).join(", ")
             setClipboard(null)
-            toast.success(`Pasted: ${itemNames}`)
         },
         [clipboard, updateStructure, onDelete],
     )
@@ -502,7 +491,6 @@ export const useFolderStructure = (tabId?: string) => {
             setSelectedItems([])
             setSelectionOrder([])
             setClipboard(null)
-            toast.success(`${newStructure.name} template applied successfully`)
         } catch (error) {
             console.error("Error applying framework structure:", error)
             toast.error("Failed to apply framework template")
@@ -686,12 +674,7 @@ export const useFolderStructure = (tabId?: string) => {
                     setOpenFolders((prev) => new Set([...prev, targetId]))
                 }
 
-                const itemNames = draggedItems.map((item) => item.name).join(", ")
-                if (isSameParent && position !== "inside") {
-                    toast.success(`Reordered: ${itemNames}`)
-                } else {
-                    toast.success(`Moved ${itemNames} to "${targetItem.name}"`)
-                }
+                draggedItems.map((item) => item.name).join(", ")
             } catch (error) {
                 console.error("Drop error:", error)
                 toast.error("Failed to move items")
