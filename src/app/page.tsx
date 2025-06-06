@@ -53,7 +53,7 @@ export default function Home(): React.JSX.Element {
                 } else {
                     const defaultTab: TabStructure = {
                         id: "folder-structure-1",
-                        label: "Project Structure",
+                        label: "Folder Structure",
                         createdAt: Date.now(),
                     }
                     setTabs([defaultTab])
@@ -339,7 +339,7 @@ export default function Home(): React.JSX.Element {
                             {tabs.map((tab) => (
                                 <TabsContent key={tab.id} value={tab.id}>
                                     <div className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-lg bg-white dark:bg-gray-900 backdrop-blur-sm">
-                                        <FolderStructureBuilder tabId={tab.id} />
+                                        <FolderStructureBuilder tabId={tab.id} tabLabel={tab.label} />
                                     </div>
                                 </TabsContent>
                             ))}

@@ -15,9 +15,10 @@ import AiGenerate from "./folder-structure/ai-generate"
 
 interface FolderStructureBuilderProps {
     tabId: string
+    tabLabel: string
 }
 
-const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
+const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps) => {
     const {
         structure,
         openFolders,
@@ -93,7 +94,7 @@ const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4 hidden md:block lg:block">
-                                    <h2 className="text-lg font-semibold">Folder Structure</h2>
+                                    <h2 className="text-lg font-semibold">{tabLabel}</h2>
                                 </div>
                                 <div className="hidden md:block lg:block">
                                     <ProfileCard />
