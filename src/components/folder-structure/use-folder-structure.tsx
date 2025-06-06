@@ -30,6 +30,10 @@ export const useFolderStructure = (tabId?: string) => {
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [showShortcutsDialog, setShowShortcutsDialog] = useState(false)
 
+    // Loading states
+    const [isLoading, setIsLoading] = useState(true)
+    const [isFrameworkLoading, setIsFrameworkLoading] = useState(false)
+
     // Computed values
     const structureDisplay = generateStructureDisplay(structure)
 
@@ -42,26 +46,35 @@ export const useFolderStructure = (tabId?: string) => {
     useEffect(() => {
         if (typeof window === "undefined") return
 
-        try {
-            const storageKey = getStorageKey()
-            const savedData = localStorage.getItem(storageKey)
+        const loadData = async () => {
+            try {
+                // Simulate loading time
+                await new Promise((resolve) => setTimeout(resolve, 500))
 
-            if (savedData) {
-                const parsedData = JSON.parse(savedData)
-                if (parsedData.structure) {
-                    setStructure(parsedData.structure)
+                const storageKey = getStorageKey()
+                const savedData = localStorage.getItem(storageKey)
+
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData)
+                    if (parsedData.structure) {
+                        setStructure(parsedData.structure)
+                    }
+                    if (parsedData.openFolders && Array.isArray(parsedData.openFolders)) {
+                        setOpenFolders(new Set(parsedData.openFolders))
+                    }
+                    if (parsedData.selectedFramework) {
+                        setSelectedFramework(parsedData.selectedFramework)
+                    }
                 }
-                if (parsedData.openFolders && Array.isArray(parsedData.openFolders)) {
-                    setOpenFolders(new Set(parsedData.openFolders))
-                }
-                if (parsedData.selectedFramework) {
-                    setSelectedFramework(parsedData.selectedFramework)
-                }
+            } catch (error) {
+                console.error("Error loading structure from localStorage:", error)
+                toast.error("Failed to load saved structure")
+            } finally {
+                setIsLoading(false)
             }
-        } catch (error) {
-            console.error("Error loading structure from localStorage:", error)
-            toast.error("Failed to load saved structure")
         }
+
+        loadData()
     }, [getStorageKey])
 
     // Save data to localStorage
@@ -194,6 +207,10 @@ export const useFolderStructure = (tabId?: string) => {
             if (newItemId) {
                 setCurrentEditingId(newItemId)
             }
+
+            if (finalName) {
+                toast.success(`${type === "folder" ? "Folder" : "File"} "${finalName}" created`)
+            }
         },
         [updateStructure],
     )
@@ -226,6 +243,7 @@ export const useFolderStructure = (tabId?: string) => {
             })
 
             const itemNames = itemsToDelete.map((item) => item.name).join(", ")
+            toast.success(`Deleted: ${itemNames}`)
         },
         [structure, findItemById, updateStructure],
     )
@@ -248,6 +266,7 @@ export const useFolderStructure = (tabId?: string) => {
                 return renameInItem(prev)
             })
 
+            toast.success(`Renamed to "${newName}"`)
         },
         [updateStructure],
     )
@@ -260,6 +279,7 @@ export const useFolderStructure = (tabId?: string) => {
             if (items.length > 0) {
                 setClipboard({ item: items[0], operation: "copy" }) // For now, handle single item
                 const itemNames = items.map((item) => item.name).join(", ")
+                toast.success(`Copied: ${itemNames}`)
             }
         },
         [structure, findItemById],
@@ -273,6 +293,7 @@ export const useFolderStructure = (tabId?: string) => {
             if (items.length > 0) {
                 setClipboard({ item: items[0], operation: "cut" }) // For now, handle single item
                 const itemNames = items.map((item) => item.name).join(", ")
+                toast.success(`Cut: ${itemNames}`)
             }
         },
         [structure, findItemById],
@@ -315,6 +336,7 @@ export const useFolderStructure = (tabId?: string) => {
             }
 
             setClipboard(null)
+            toast.success(`"${clipboard.item.name}" pasted`)
         },
         [clipboard, updateStructure, onDelete],
     )
@@ -356,7 +378,7 @@ export const useFolderStructure = (tabId?: string) => {
     }, [])
 
     const handleExport = useCallback(
-        (format: "json" | "text") => {
+        (format: "json" | "text" | "tree") => {
             exportStructure(structure, format)
             setShowExportDialog(false)
             toast.success(`Structure exported as ${format.toUpperCase()}`)
@@ -364,16 +386,23 @@ export const useFolderStructure = (tabId?: string) => {
         [structure],
     )
 
-    const handleFrameworkSelect = useCallback((newStructure: FileItem) => {
+    const handleFrameworkSelect = useCallback(async (newStructure: FileItem) => {
+        setIsFrameworkLoading(true)
         try {
+            // Simulate loading time for framework
+            await new Promise((resolve) => setTimeout(resolve, 300))
+
             setStructure(newStructure)
             setSelectedFramework(newStructure.name)
             setOpenFolders(new Set(["root"]))
             setSelectedItems([])
             setClipboard(null)
+            toast.success(`${newStructure.name} template applied successfully`)
         } catch (error) {
             console.error("Error applying framework structure:", error)
             toast.error("Failed to apply framework template")
+        } finally {
+            setIsFrameworkLoading(false)
         }
     }, [])
 
@@ -515,8 +544,12 @@ export const useFolderStructure = (tabId?: string) => {
                     setOpenFolders((prev) => new Set([...prev, targetId]))
                 }
 
-                draggedItems.map((item) => item.name).join(", ")
-
+                const itemNames = draggedItems.map((item) => item.name).join(", ")
+                if (isSameParent && position !== "inside") {
+                    toast.success(`Reordered: ${itemNames}`)
+                } else {
+                    toast.success(`Moved ${itemNames} to "${targetItem.name}"`)
+                }
             } catch (error) {
                 console.error("Drop error:", error)
                 toast.error("Failed to move items")
@@ -608,6 +641,8 @@ export const useFolderStructure = (tabId?: string) => {
         showExportDialog,
         showShortcutsDialog,
         selectedFramework,
+        isLoading,
+        isFrameworkLoading,
 
         // Setters
         setOpenFolders,

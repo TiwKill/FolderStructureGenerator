@@ -18,6 +18,7 @@ export interface FrameworkStructureProps {
     selectedFramework?: {
         framework: string
     } | null
+    isLoading?: boolean
 }
 
 export interface FileIcon {
@@ -29,7 +30,7 @@ export interface DialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onClear?: () => void
-    onExport?: (format: "json" | "text") => void
+    onExport?: (format: "json" | "text" | "tree") => void
 }
 
 // Remove FileFolderItem - use FileItem instead

@@ -30,6 +30,7 @@ export const createDefaultStructure = (): FileItem => {
     }
 }
 
+// Original function for Structure Preview (directory format)
 export const generateStructureDisplay = (structure: FileItem, indent = ""): string => {
     let result = ""
 
@@ -52,6 +53,38 @@ export const generateStructureDisplay = (structure: FileItem, indent = ""): stri
             }
         } else {
             result += `${indent}${structure.name}\n`
+        }
+    }
+
+    return result
+}
+
+// New function for Tree view format
+export const generateTreeView = (structure: FileItem, prefix = "", isLast = true): string => {
+    let result = ""
+
+    if (structure.id === "root") {
+        // Root folder
+        result += `${structure.name}/\n`
+        if (structure.children && structure.children.length > 0) {
+            structure.children.forEach((child, index) => {
+                const isLastChild = index === structure.children!.length - 1
+                result += generateTreeView(child, "", isLastChild)
+            })
+        }
+    } else {
+        // Regular files and folders
+        const connector = isLast ? "└─ " : "├─ "
+        const itemName = structure.type === "folder" ? `${structure.name}/` : structure.name
+
+        result += `${prefix}${connector}${itemName}\n`
+
+        if (structure.type === "folder" && structure.children && structure.children.length > 0) {
+            const newPrefix = prefix + (isLast ? "   " : "│  ")
+            structure.children.forEach((child, index) => {
+                const isLastChild = index === structure.children!.length - 1
+                result += generateTreeView(child, newPrefix, isLastChild)
+            })
         }
     }
 
@@ -148,7 +181,7 @@ export const generateUniqueName = (
     return generateNumberedName(existingNames, baseName)
 }
 
-export const exportStructure = (structure: FileItem, format: "json" | "text") => {
+export const exportStructure = (structure: FileItem, format: "json" | "text" | "tree") => {
     let content: string
     let filename: string
     let mimeType: string
@@ -157,6 +190,10 @@ export const exportStructure = (structure: FileItem, format: "json" | "text") =>
         content = JSON.stringify(structure, null, 2)
         filename = "project-structure.json"
         mimeType = "application/json"
+    } else if (format === "tree") {
+        content = generateTreeView(structure)
+        filename = "project-structure-tree.txt"
+        mimeType = "text/plain"
     } else {
         content = generateStructureDisplay(structure)
         filename = "project-structure.txt"
@@ -190,5 +227,5 @@ export const importStructure = (content: string): FileItem => {
 }
 
 export const formatTreeStructure = (structure: FileItem): string => {
-    return generateStructureDisplay(structure)
+    return generateTreeView(structure)
 }

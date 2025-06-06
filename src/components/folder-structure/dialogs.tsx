@@ -44,14 +44,18 @@ export function ExportDialog({ open, onOpenChange, onExport }: DialogProps) {
                     <DialogTitle>Export Structure</DialogTitle>
                     <DialogDescription>Choose the format to export your folder structure.</DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 py-4">
+                <div className="grid grid-cols-3 gap-4 py-4">
                     <Button variant="outline" onClick={() => onExport?.("json")} className="h-20 flex-col gap-2">
                         <span className="font-semibold">JSON</span>
                         <span className="text-xs text-muted-foreground">Machine readable format</span>
                     </Button>
+                    <Button variant="outline" onClick={() => onExport?.("tree")} className="h-20 flex-col gap-2">
+                        <span className="font-semibold">Tree</span>
+                        <span className="text-xs text-muted-foreground">Tree view format</span>
+                    </Button>
                     <Button variant="outline" onClick={() => onExport?.("text")} className="h-20 flex-col gap-2">
-                        <span className="font-semibold">Text</span>
-                        <span className="text-xs text-muted-foreground">Human readable tree</span>
+                        <span className="font-semibold">Directory</span>
+                        <span className="text-xs text-muted-foreground">Directory format</span>
                     </Button>
                 </div>
                 <DialogFooter>
@@ -71,10 +75,13 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
         { key: "Ctrl/Cmd + V", action: "Paste items (in folder)" },
         { key: "Ctrl/Cmd + A", action: "Select all items" },
         { key: "Delete", action: "Delete selected items" },
+        { key: "F2", action: "Rename selected item" },
         { key: "Double Click", action: "Rename item" },
         { key: "Ctrl/Cmd + Click", action: "Multi-select items" },
         { key: "Shift + Click", action: "Range select items" },
         { key: "Drag & Drop", action: "Move items to folder" },
+        { key: "Double Click (Tab)", action: "Rename tab" },
+        { key: "Drag & Drop (Tab)", action: "Reorder tabs" },
     ]
 
     return (
