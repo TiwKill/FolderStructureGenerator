@@ -78,6 +78,8 @@ const FolderStructureBuilder = ({ tabId }: FolderStructureBuilderProps) => {
     return (
         <div className="h-full w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden">
             <div className="flex flex-col lg:flex-row h-full">
+
+                {/* Left Sidebar */}
                 <div className="flex-1 overflow-auto p-4 lg:p-6 min-h-[50vh] lg:min-h-0">
                     <div className="max-w-3xl mx-auto">
                         <div className="flex justify-between items-center mb-4">
