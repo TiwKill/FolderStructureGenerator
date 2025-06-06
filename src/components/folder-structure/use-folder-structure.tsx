@@ -269,6 +269,7 @@ export const useFolderStructure = (tabId?: string) => {
                             id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                             name: uniqueName,
                             type,
+                            parentId: item.id,
                             children: type === "folder" ? [] : undefined,
                         }
 
@@ -370,7 +371,7 @@ export const useFolderStructure = (tabId?: string) => {
             const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
 
             if (items.length > 0) {
-                setClipboard({ items, operation: "copy" })
+                setClipboard({ items, operation: "copy", timestamp: Date.now() })
                 items.map((item) => item.name).join(", ")
             }
         },
@@ -383,7 +384,7 @@ export const useFolderStructure = (tabId?: string) => {
             const items = idsToProcess.map((id) => findItemById(structure, id)).filter(Boolean) as FileItem[]
 
             if (items.length > 0) {
-                setClipboard({ items, operation: "cut" })
+                setClipboard({ items, operation: "cut", timestamp: Date.now() })
                 items.map((item) => item.name).join(", ")
             }
         },
