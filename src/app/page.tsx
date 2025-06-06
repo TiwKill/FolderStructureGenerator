@@ -285,7 +285,7 @@ export default function Home(): React.JSX.Element {
                                                                     e.stopPropagation()
                                                                     startEditingTab(tab.id)
                                                                 }}
-                                                                className="cursor-text"
+                                                                className="cursor"
                                                             >
                                                                 {tab.label}
                                                             </span>
