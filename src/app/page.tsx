@@ -3,7 +3,7 @@
 import React from "react"
 import FolderStructureBuilder from "@/components/folder-structure"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Plus, Folder, GripHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
@@ -316,6 +316,7 @@ export default function Home(): React.JSX.Element {
                                                 </div>
                                             ))}
                                         </TabsList>
+                                        <ScrollBar orientation="horizontal" />
                                     </ScrollArea>
                                 </div>
 
