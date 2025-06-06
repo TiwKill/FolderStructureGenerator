@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { DialogProps } from "@/types/interfaces"
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function ClearDialog({ open, onOpenChange, onClear }: DialogProps) {
     return (
@@ -75,7 +76,6 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
         { key: "Ctrl/Cmd + V", action: "Paste items (in folder)" },
         { key: "Ctrl/Cmd + A", action: "Select all items" },
         { key: "Delete", action: "Delete selected items" },
-        { key: "F2", action: "Rename selected item" },
         { key: "Double Click", action: "Rename item" },
         { key: "Ctrl/Cmd + Click", action: "Multi-select items" },
         { key: "Shift + Click", action: "Range select items" },
@@ -86,28 +86,46 @@ export function ShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenC
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="
+            max-w-md 
+            w-[calc(100%-2rem)] 
+            mx-4 
+            sm:mx-0 
+            my-4 
+            sm:my-0
+            max-h-[90vh]
+            overflow-hidden
+          ">
                 <DialogHeader>
                     <DialogTitle>Keyboard Shortcuts</DialogTitle>
                     <DialogDescription>Quick actions to boost your productivity</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                    {shortcuts.map((shortcut, index) => (
-                        <div key={index}>
-                            <div className="flex items-center justify-between py-2">
-                                <span className="text-sm">{shortcut.action}</span>
-                                <Badge variant="secondary" className="font-mono text-xs">
-                                    {shortcut.key}
-                                </Badge>
+
+                <ScrollArea className="max-h-[60vh] pr-4">
+                    <div className="space-y-4 py-2">
+                        {shortcuts.map((shortcut, index) => (
+                            <div key={index}>
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-sm">{shortcut.action}</span>
+                                    <Badge variant="secondary" className="font-mono text-xs">
+                                        {shortcut.key}
+                                    </Badge>
+                                </div>
+                                {index < shortcuts.length - 1 && <Separator />}
                             </div>
-                            {index < shortcuts.length - 1 && <Separator />}
-                        </div>
-                    ))}
-                </div>
-                <DialogFooter>
-                    <Button onClick={() => onOpenChange(false)}>Got it</Button>
+                        ))}
+                    </div>
+                </ScrollArea>
+
+                <DialogFooter className="pt-4">
+                    <Button
+                        onClick={() => onOpenChange(false)}
+                        className="w-full sm:w-auto"
+                    >
+                        Got it
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-    )
+    );
 }
