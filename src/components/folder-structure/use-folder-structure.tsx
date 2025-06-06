@@ -269,7 +269,6 @@ export const useFolderStructure = (tabId?: string) => {
                             id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                             name: uniqueName,
                             type,
-                            parentId: item.id,
                             children: type === "folder" ? [] : undefined,
                         }
 
