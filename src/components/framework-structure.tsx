@@ -17,9 +17,7 @@ import { toast } from "sonner"
 export default function FrameworkStructure({ onFrameworkSelect, selectedFramework }: FrameworkStructureProps) {
     const handleFrameworkSelect = (framework: string) => {
         try {
-            console.log("Selecting framework:", framework) // Debug log
             const structure = getFrameworkStructure(framework)
-            console.log("Generated structure:", structure) // Debug log
             onFrameworkSelect?.(structure)
         } catch (error) {
             console.error("Framework selection error:", error) // Debug log
