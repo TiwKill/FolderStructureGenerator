@@ -16,7 +16,7 @@ import FrameworkInstructions from "./framework-instructions"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 export default function AiGenerate({ tabId }: { tabId?: string }) {
     const [structure, setStructure] = useState<FileItem>(createDefaultStructure())
@@ -124,18 +124,15 @@ export default function AiGenerate({ tabId }: { tabId?: string }) {
             const data = await response.json()
 
             // Show success message
-            toast({
-                title: "โครงสร้างโฟลเดอร์ถูกสร้างแล้ว",
+            toast.success("โครงสร้างโฟลเดอร์ถูกสร้างแล้ว", {
                 description: `สร้างโครงสร้างโฟลเดอร์เรียบร้อยแล้วที่: ${data.path}`,
             })
 
         } catch (error) {
             console.error('Error generating folder structure:', error)
             // Show error message
-            toast({
-                title: "เกิดข้อผิดพลาด",
+            toast.error("เกิดข้อผิดพลาด", {
                 description: "ไม่สามารถสร้างโครงสร้างโฟลเดอร์ได้",
-                variant: "destructive",
             })
         }
     }
