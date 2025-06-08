@@ -71,3 +71,31 @@ export interface PasteProgress {
 
 // Remove FileFolderItem - use FileItem instead
 export type FileFolderItem = FileItem
+
+// Payment and verification status types
+export type PaymentStatus = 'pending' | 'verifying' | 'verified' | 'rejected';
+
+export interface PaymentInfo {
+    id: string
+    amount: number
+    status: PaymentStatus
+    timestamp: Date
+    verifiedAt?: Date
+    slipUrl?: string
+}
+
+export interface UserCredits {
+    id: string
+    userId: string
+    credits: number
+    lastUpdated: Date
+    transactions: CreditTransaction[]
+}
+
+export interface CreditTransaction {
+    id: string
+    type: 'add' | 'use'
+    amount: number
+    timestamp: Date
+    paymentId?: string
+}
