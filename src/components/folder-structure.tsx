@@ -163,7 +163,6 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                 <TabsList className="w-full grid grid-cols-2 mb-4">
                                     <TabsTrigger 
                                         value="structure-preview"
-                                        className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800"
                                     >
                                         Structure Preview
                                     </TabsTrigger>
