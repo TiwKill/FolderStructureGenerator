@@ -134,15 +134,12 @@ export default function FrameworkStructure({
 
     const handleFrameworkSelect = (framework: string) => {
         try {
-            console.log("Selecting framework:", framework, "with options:", frameworkOptions[framework])
-
             // Get base structure
             const baseStructure = getFrameworkStructure(framework)
 
             // Apply customizations based on selected options
             const customizedStructure = applyFrameworkOptions(baseStructure, framework, frameworkOptions[framework])
 
-            console.log("Generated customized structure:", customizedStructure)
             onFrameworkSelect?.(customizedStructure)
             setShowOptionsDialog(false) // Close dialog after applying
             toast.success(`${framework} template loaded with custom options`)

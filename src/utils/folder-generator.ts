@@ -69,7 +69,10 @@ export async function createZipFromStructure(structure: FileItem[]): Promise<Blo
             const itemPath = currentPath ? `${currentPath}/${item.name}` : item.name
             
             if (item.type === 'folder') {
-                if (item.children) {
+                // Add empty folder
+                zip.folder(itemPath)
+                // Add children if they exist
+                if (item.children && item.children.length > 0) {
                     addToZip(item.children, itemPath)
                 }
             } else {
@@ -96,9 +99,12 @@ export function downloadAsZip(structure: FileItem[], filename: string = 'project
     })
 }
 
-export function downloadAsDirectory(structure: FileItem[], filename: string = 'project-structure') {
-    // Create zip from the structure
-    createZipFromStructure(structure).then(blob => {
+export function downloadAsDirectory(structure: FileItem, filename: string = 'project-structure') {
+    // Create zip from the structure, making sure to include the root folder
+    createZipFromStructure([{
+        ...structure,
+        children: structure.children || []
+    }]).then(blob => {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url

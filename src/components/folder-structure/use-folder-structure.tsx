@@ -55,18 +55,8 @@ export const useFolderStructure = (tabId?: string) => {
                 const storageKey = getStorageKey()
                 const savedData = localStorage.getItem(storageKey)
 
-                console.log("Loading from localStorage:", { storageKey, hasData: !!savedData })
-
                 if (savedData) {
                     const parsedData = JSON.parse(savedData)
-
-                    console.log("Parsed data:", {
-                        hasStructure: !!parsedData.structure,
-                        openFoldersCount: parsedData.openFolders?.length || 0,
-                        selectedItemsCount: parsedData.selectedItems?.length || 0,
-                        selectionOrderCount: parsedData.selectionOrder?.length || 0,
-                        framework: parsedData.selectedFramework,
-                    })
 
                     // Load structure
                     if (parsedData.structure) {
@@ -120,14 +110,6 @@ export const useFolderStructure = (tabId?: string) => {
                 lastUpdated: Date.now(),
             }
 
-            console.log("Saving to localStorage:", {
-                storageKey,
-                dataSize: JSON.stringify(dataToSave).length,
-                openFoldersCount: dataToSave.openFolders.length,
-                selectedItemsCount: dataToSave.selectedItems.length,
-                selectionOrderCount: dataToSave.selectionOrder.length,
-            })
-
             localStorage.setItem(storageKey, JSON.stringify(dataToSave))
         } catch (error) {
             console.error("Error saving structure to localStorage:", error)
@@ -179,24 +161,15 @@ export const useFolderStructure = (tabId?: string) => {
     // Fixed selection logic to prevent duplicate entries
     const handleSelect = useCallback(
         (id: string, isMultiSelect = false) => {
-            console.log("handleSelect called:", {
-                id,
-                isMultiSelect,
-                currentSelected: selectedItems,
-                currentOrder: selectionOrder,
-            })
-
             if (isMultiSelect) {
                 setSelectedItems((prevSelected) => {
                     if (prevSelected.includes(id)) {
                         // Remove from selection
                         const newSelected = prevSelected.filter((item) => item !== id)
-                        console.log("Removing from selected:", { id, newSelected })
 
                         // Also update selection order
                         setSelectionOrder((prevOrder) => {
                             const newOrder = prevOrder.filter((itemId) => itemId !== id)
-                            console.log("Removing from order:", { id, newOrder })
                             return newOrder
                         })
 
@@ -204,12 +177,10 @@ export const useFolderStructure = (tabId?: string) => {
                     } else {
                         // Add to selection
                         const newSelected = [...prevSelected, id]
-                        console.log("Adding to selected:", { id, newSelected })
 
                         // Also update selection order
                         setSelectionOrder((prevOrder) => {
                             const newOrder = prevOrder.includes(id) ? prevOrder : [...prevOrder, id]
-                            console.log("Adding to order:", { id, newOrder })
                             return newOrder
                         })
 
@@ -218,7 +189,6 @@ export const useFolderStructure = (tabId?: string) => {
                 })
             } else {
                 // Single select - replace everything
-                console.log("Single select:", { id })
                 setSelectedItems([id])
                 setSelectionOrder([id])
             }
@@ -232,7 +202,6 @@ export const useFolderStructure = (tabId?: string) => {
             const allIds = structure.children.map((child) => child.id)
             setSelectedItems(allIds)
             setSelectionOrder(allIds)
-            console.log("Select all items:", allIds)
         }
     }, [structure])
 
@@ -244,7 +213,6 @@ export const useFolderStructure = (tabId?: string) => {
 
     const onAdd = useCallback(
         (parentId: string, name: string, type: "file" | "folder") => {
-            console.log("onAdd called with:", { parentId, name, type })
 
             let newItemId: string | null = null
             let finalName: string | null = null
@@ -252,16 +220,8 @@ export const useFolderStructure = (tabId?: string) => {
             updateStructure((prev) => {
                 const addToItem = (item: FileItem): FileItem => {
                     if (item.id === parentId) {
-                        console.log(
-                            "Found parent:",
-                            item.name,
-                            "with children:",
-                            item.children?.map((c) => c.name),
-                        )
-
                         // Generate unique name using the CURRENT children (not stale state)
                         const uniqueName = generateUniqueNameForNewItem(item.children || [], name)
-                        console.log("Generated unique name:", uniqueName)
 
                         finalName = uniqueName
 
@@ -273,17 +233,12 @@ export const useFolderStructure = (tabId?: string) => {
                         }
 
                         newItemId = newItem.id
-                        console.log("Creating new item:", newItem)
 
                         const updatedItem = {
                             ...item,
                             children: [...(item.children || []), newItem],
                         }
 
-                        console.log(
-                            "Updated parent children:",
-                            updatedItem.children?.map((c) => c.name),
-                        )
                         return updatedItem
                     }
                     if (item.children) {
@@ -472,11 +427,11 @@ export const useFolderStructure = (tabId?: string) => {
 
     const handleExport = useCallback(
         (format: "json" | "text" | "tree" | "zip" | "directory") => {
-            exportStructure(structure, format)
+            exportStructure(structure, format, selectedItems)
             setShowExportDialog(false)
             toast.success(`Structure exported as ${format.toUpperCase()}`)
         },
-        [structure],
+        [structure, selectedItems],
     )
 
     const handleFrameworkSelect = useCallback(async (newStructure: FileItem) => {
@@ -516,21 +471,17 @@ export const useFolderStructure = (tabId?: string) => {
                 return
             }
 
-            console.log("Keyboard shortcut:", { key: e.key, ctrl: e.ctrlKey, meta: e.metaKey })
-
             if (e.ctrlKey || e.metaKey) {
                 switch (e.key.toLowerCase()) {
                     case "c":
                         if (selectedItems.length > 0) {
                             e.preventDefault()
-                            console.log("Copy shortcut triggered")
                             onCopy(selectedItems)
                         }
                         break
                     case "x":
                         if (selectedItems.length > 0) {
                             e.preventDefault()
-                            console.log("Cut shortcut triggered")
                             onCut(selectedItems)
                         }
                         break
@@ -539,27 +490,22 @@ export const useFolderStructure = (tabId?: string) => {
                             const selectedItem = findItemById(structure, selectedItems[0])
                             if (selectedItem?.type === "folder") {
                                 e.preventDefault()
-                                console.log("Paste shortcut triggered")
                                 onPaste(selectedItems[0])
                             }
                         }
                         break
                     case "a":
                         e.preventDefault()
-                        console.log("Select all shortcut triggered")
                         selectAllItems()
                         break
                 }
             } else if (e.key === "Delete" && selectedItems.length > 0) {
                 e.preventDefault()
-                console.log("Delete shortcut triggered")
                 onDelete(selectedItems)
             } else if (e.key === "F2" && selectedItems.length === 1) {
                 e.preventDefault()
-                console.log("Rename shortcut triggered")
                 setCurrentEditingId(selectedItems[0])
             } else if (e.key === "Escape") {
-                console.log("Escape shortcut triggered")
                 clearSelection()
             }
         }

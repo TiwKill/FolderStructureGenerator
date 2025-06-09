@@ -338,17 +338,13 @@ const FRAMEWORK_GENERATORS: Record<string, () => FileItem> = {
 }
 
 export const getFrameworkStructure = (framework: string): FileItem => {
-    console.log("Getting framework structure for:", framework) // Debug log
-    console.log("Available frameworks:", Object.keys(FRAMEWORK_GENERATORS)) // Debug log
-
     const generator = FRAMEWORK_GENERATORS[framework]
     if (!generator) {
-        console.error(`Framework "${framework}" not found in generators`) // Debug log
+        console.error(`Framework "${framework}" not found in generators`)
         throw new Error(`Unsupported framework: ${framework}`)
     }
 
     const structure = generator()
-    console.log("Generated structure:", structure) // Debug log
     return structure
 }
 

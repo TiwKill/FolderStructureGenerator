@@ -104,14 +104,37 @@ export const generateUniqueName = (
     return generateNumberedName(existingNames, baseName)
 }
 
-export const exportStructure = (structure: FileItem, format: "json" | "text" | "tree" | "zip" | "directory") => {
+const findSelectedFolder = (structure: FileItem, selectedItems: string[]): FileItem | null => {
+    if (selectedItems.includes(structure.id) && structure.type === 'folder') {
+        return {
+            ...structure,
+            children: structure.children || []
+        };
+    }
+
+    if (structure.type === 'folder' && structure.children) {
+        for (const child of structure.children) {
+            const found = findSelectedFolder(child, selectedItems);
+            if (found) return found;
+        }
+    }
+
+    return null;
+}
+
+export const exportStructure = (structure: FileItem, format: "json" | "text" | "tree" | "zip" | "directory", selectedItems: string[] = []) => {
     try {
         if (format === "zip") {
             return downloadAsZip([structure], "project-structure.zip")
         }
 
         if (format === "directory") {
-            return downloadAsDirectory([structure], "project-structure")
+            const selectedFolder = findSelectedFolder(structure, selectedItems);
+            if (!selectedFolder) {
+                console.error("No folder selected");
+                return;
+            }
+            return downloadAsDirectory(selectedFolder, selectedFolder.name)
         }
 
         let content = ""
