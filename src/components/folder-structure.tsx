@@ -199,20 +199,6 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                 </div>
                             )}
                         </div>
-
-                        {/* Structure Preview */}
-                        {/* <div>
-                            <h3 className="text-sm font-medium mb-2">Structure Preview</h3>
-                            {isFrameworkLoading ? (
-                                <StructurePreviewSkeleton />
-                            ) : (
-                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md overflow-hidden">
-                                    <ScrollArea className="h-64 sm:h-80 lg:h-96 w-full">
-                                        <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">{structureDisplay}</pre>
-                                    </ScrollArea>
-                                </div>
-                            )}
-                        </div> */}
                     </div>
                 </div>
             </div>
