@@ -1,10 +1,10 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { Keyboard, Undo2, Redo2 } from "lucide-react"
+import { Keyboard, Undo2, Redo2, Settings2 } from "lucide-react"
 import FileFolder from "./folder-structure/file-folder"
 import ProfileCard from "./folder-structure/profile-card"
 import { ModeToggle } from "./mode-toggle"
-import { ClearDialog, ExportDialog, ShortcutsDialog } from "./folder-structure/dialogs"
+import { ClearDialog, ExportDialog, ShortcutsDialog, StructurePreviewDialog } from "./folder-structure/dialogs/folder-structure-dialogs"
 import { useFolderStructure } from "../hooks/use-folder-structure"
 import FrameworkStructure from "./framework-structure"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -23,11 +23,10 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         selectedItems,
         clipboard,
         currentEditingId,
-        structureDisplay,
-        treeViewDisplay,
         showClearDialog,
         showExportDialog,
         showShortcutsDialog,
+        showPreviewDialog,
         selectedFramework,
         isLoading,
         isFrameworkLoading,
@@ -38,6 +37,10 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         setShowClearDialog,
         setShowExportDialog,
         setShowShortcutsDialog,
+        setShowPreviewDialog,
+        previewFormat,
+        setPreviewFormat,
+        getPreviewContent,
         onCopy,
         onCut,
         onDelete,
@@ -188,13 +191,26 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                     <div className="max-w-3xl mx-auto lg:max-w-none space-y-6">
                         {/* Structure Preview */}
                         <div>
-                            <h3 className="text-sm font-medium mb-2">Structure Preview</h3>
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-sm font-medium">Structure Preview</h3>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowPreviewDialog(true)}
+                                    className="h-8 w-8"
+                                    title="Change Preview Format"
+                                >
+                                    <Settings2 className="w-4 h-4" />
+                                </Button>
+                            </div>
                             {isFrameworkLoading ? (
                                 <StructurePreviewSkeleton />
                             ) : (
                                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-md overflow-hidden">
                                     <ScrollArea className="h-64 sm:h-80 lg:h-full w-full">
-                                        <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">{treeViewDisplay}</pre>
+                                        <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">
+                                            {getPreviewContent()}
+                                        </pre>
                                     </ScrollArea>
                                 </div>
                             )}
@@ -208,6 +224,13 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
             <ExportDialog open={showExportDialog} onOpenChange={setShowExportDialog} onExport={handleExport} />
 
             <ShortcutsDialog open={showShortcutsDialog} onOpenChange={setShowShortcutsDialog} />
+
+            <StructurePreviewDialog
+                open={showPreviewDialog}
+                onOpenChange={setShowPreviewDialog}
+                onFormatSelect={setPreviewFormat}
+                currentFormat={previewFormat}
+            />
         </div>
     )
 }

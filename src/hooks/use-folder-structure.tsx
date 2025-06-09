@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
-import type { FileItem, ClipboardItem } from "@/types/interfaces"
+import type { FileItem, ClipboardItem, StructurePreviewDialogProps } from "@/types/interfaces"
 import {
     createDefaultStructure,
     generateStructureDisplay,
@@ -17,6 +17,7 @@ import {
 import { useHistory } from "./use-history"
 
 const STORAGE_KEY_PREFIX = "project-structure-data-"
+const STORAGE_KEY = 'folder-structure-preview-format'
 
 export const useFolderStructure = (tabId?: string) => {
     // Core state
@@ -41,6 +42,7 @@ export const useFolderStructure = (tabId?: string) => {
     const [showClearDialog, setShowClearDialog] = useState(false)
     const [showExportDialog, setShowExportDialog] = useState(false)
     const [showShortcutsDialog, setShowShortcutsDialog] = useState(false)
+    const [showPreviewDialog, setShowPreviewDialog] = useState(false)
 
     // Loading states
     const [isLoading, setIsLoading] = useState(true)
@@ -324,7 +326,7 @@ export const useFolderStructure = (tabId?: string) => {
                 return newSet
             })
 
-            const itemNames = itemsToDelete.map((item) => item.name).join(", ")
+            itemsToDelete.map((item) => item.name).join(", ")
         },
         [structure, findItemById, updateStructure],
     )
@@ -419,7 +421,7 @@ export const useFolderStructure = (tabId?: string) => {
                 onDelete(idsToDelete)
             }
 
-            const itemNames = clipboard.items.map((item) => item.name).join(", ")
+            clipboard.items.map((item) => item.name).join(", ")
             setClipboard(null)
         },
         [clipboard, updateStructure, onDelete, generateNewIds],
@@ -770,6 +772,40 @@ export const useFolderStructure = (tabId?: string) => {
         }
     }, [canRedo, redoHistory])
 
+    const usePreviewFormatDialog = () => {
+        const [format, setFormat] = useState<StructurePreviewDialogProps['currentFormat']>(() => {
+            if (typeof window !== 'undefined') {
+                const saved = localStorage.getItem(STORAGE_KEY)
+                return (saved as StructurePreviewDialogProps['currentFormat']) || 'tree'
+            }
+            return 'tree'
+        })
+    
+        useEffect(() => {
+            localStorage.setItem(STORAGE_KEY, format)
+        }, [format])
+    
+        return {
+            format,
+            setFormat
+        }
+    } 
+
+    // Preview Format
+    const { format: previewFormat, setFormat: setPreviewFormat } = usePreviewFormatDialog()
+
+    // Function to get preview content based on format
+    const getPreviewContent = useCallback(() => {
+        switch (previewFormat) {
+            case 'tree':
+                return generateTreeView(structure)
+            case 'text':
+                return generateStructureDisplay(structure)
+            default:
+                return 'tree'
+        }
+    }, [structure, previewFormat])
+
     return {
         // State
         structure,
@@ -783,6 +819,7 @@ export const useFolderStructure = (tabId?: string) => {
         showClearDialog,
         showExportDialog,
         showShortcutsDialog,
+        showPreviewDialog,
         selectedFramework,
         isLoading,
         isFrameworkLoading,
@@ -795,6 +832,12 @@ export const useFolderStructure = (tabId?: string) => {
         setShowClearDialog,
         setShowExportDialog,
         setShowShortcutsDialog,
+        setShowPreviewDialog,
+
+        // Preview Format
+        previewFormat,
+        setPreviewFormat,
+        getPreviewContent,
 
         // Handlers
         onCopy,

@@ -57,49 +57,16 @@ export interface HistoryAction {
     description: string
 }
 
-export interface NameConflictResolution {
-    action: "replace" | "keep" | "rename"
-    newName?: string
-}
-
-export interface PasteProgress {
-    total: number
-    completed: number
-    currentItem: string
-    isActive: boolean
-}
-
 // Remove FileFolderItem - use FileItem instead
 export type FileFolderItem = FileItem
 
-// Payment and verification status types
-export type PaymentStatus = 'pending' | 'verifying' | 'verified' | 'rejected';
-
-export interface PaymentInfo {
-    id: string
-    amount: number
-    status: PaymentStatus
-    timestamp: Date
-    verifiedAt?: Date
-    slipUrl?: string
-}
-
-export interface UserCredits {
-    id: string
-    userId: string
-    credits: number
-    lastUpdated: Date
-    transactions: CreditTransaction[]
-}
-
-export interface CreditTransaction {
-    id: string
-    type: 'add' | 'use'
-    amount: number
-    timestamp: Date
-    paymentId?: string
-}
-
 export interface FolderStructure {
     [key: string]: FolderStructure | null
+}
+
+export interface StructurePreviewDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onFormatSelect: (format: "text" | "tree") => void
+    currentFormat: "text" | "tree"
 }
