@@ -8,6 +8,7 @@ import type { FileItem, ClipboardItem } from "@/types/interfaces"
 import {
     createDefaultStructure,
     generateStructureDisplay,
+    generateTreeView,
     exportStructure,
     importStructure,
     generateUniqueName,
@@ -47,6 +48,7 @@ export const useFolderStructure = (tabId?: string) => {
 
     // Computed values
     const structureDisplay = generateStructureDisplay(structure)
+    const treeViewDisplay = generateTreeView(structure)
 
     // Get storage key for this tab
     const getStorageKey = useCallback(() => {
@@ -742,6 +744,7 @@ export const useFolderStructure = (tabId?: string) => {
         clipboard,
         currentEditingId,
         structureDisplay,
+        treeViewDisplay,
         showClearDialog,
         showExportDialog,
         showShortcutsDialog,

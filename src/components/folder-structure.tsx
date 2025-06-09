@@ -9,6 +9,7 @@ import { useFolderStructure } from "../hooks/use-folder-structure"
 import FrameworkStructure from "./framework-structure"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FolderStructureSkeleton, StructurePreviewSkeleton } from "./folder-structure/skeleton-loader"
+import { ScrollArea } from "./ui/scroll-area"
 
 interface FolderStructureBuilderProps {
     tabId: string
@@ -23,6 +24,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         clipboard,
         currentEditingId,
         structureDisplay,
+        treeViewDisplay,
         showClearDialog,
         showExportDialog,
         showShortcutsDialog,
@@ -107,7 +109,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                     selectedFramework={selectedFramework ? { framework: selectedFramework } : null}
                                     isLoading={isFrameworkLoading}
                                 />
-                                
+
                                 {/* Undo/Redo buttons */}
                                 <div className="flex gap-1">
                                     <Button
@@ -183,11 +185,34 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
 
                 {/* Right Sidebar */}
                 <div className="border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-800 p-4 overflow-auto lg:w-[35%] flex-shrink-0">
-                    <div className="max-w-3xl mx-auto lg:max-w-none">
-                        <h3 className="text-lg font-medium mb-2">Structure Preview</h3>
-                        <pre className="text-xs font-mono whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded-md break-all">
-                            {structureDisplay}
-                        </pre>
+                    <div className="max-w-3xl mx-auto lg:max-w-none space-y-6">
+                        {/* Structure Preview */}
+                        <div>
+                            <h3 className="text-sm font-medium mb-2">Structure Preview</h3>
+                            {isFrameworkLoading ? (
+                                <StructurePreviewSkeleton />
+                            ) : (
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md overflow-hidden">
+                                    <ScrollArea className="h-64 sm:h-80 lg:h-full w-full">
+                                        <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">{treeViewDisplay}</pre>
+                                    </ScrollArea>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Structure Preview */}
+                        {/* <div>
+                            <h3 className="text-sm font-medium mb-2">Structure Preview</h3>
+                            {isFrameworkLoading ? (
+                                <StructurePreviewSkeleton />
+                            ) : (
+                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md overflow-hidden">
+                                    <ScrollArea className="h-64 sm:h-80 lg:h-96 w-full">
+                                        <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">{structureDisplay}</pre>
+                                    </ScrollArea>
+                                </div>
+                            )}
+                        </div> */}
                     </div>
                 </div>
             </div>
