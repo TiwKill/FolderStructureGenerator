@@ -99,3 +99,7 @@ export interface CreditTransaction {
     timestamp: Date
     paymentId?: string
 }
+
+export interface FolderStructure {
+    [key: string]: FolderStructure | null
+}
