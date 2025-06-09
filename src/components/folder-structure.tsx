@@ -160,7 +160,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                     <div className="h-full flex flex-col">
                         <div className="flex-1 overflow-y-auto p-4">
                             <Tabs defaultValue="structure-preview" className="w-full h-full">
-                                <TabsList className="w-full grid grid-cols-2 mb-4">
+                                <TabsList className="w-full h-full grid grid-cols-2 mb-4">
                                     <TabsTrigger
                                         value="structure-preview"
                                     >

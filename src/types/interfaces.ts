@@ -33,7 +33,7 @@ export interface DialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onClear?: () => void
-    onExport?: (format: "json" | "text" | "tree") => void
+    onExport?: (format: "json" | "text" | "tree" | "zip" | "directory") => void
 }
 
 export interface DuplicateFileOptions {

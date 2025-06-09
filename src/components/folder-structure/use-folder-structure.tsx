@@ -471,7 +471,7 @@ export const useFolderStructure = (tabId?: string) => {
     }, [])
 
     const handleExport = useCallback(
-        (format: "json" | "text" | "tree") => {
+        (format: "json" | "text" | "tree" | "zip" | "directory") => {
             exportStructure(structure, format)
             setShowExportDialog(false)
             toast.success(`Structure exported as ${format.toUpperCase()}`)
