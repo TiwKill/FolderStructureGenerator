@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { parseStructureFromString, generateFolderStructure } from '@/lib/utils/folder-generator'
+import { parseStructureFromString, generateFolderStructure } from '@/utils/folder-generator'
 import path from 'path'
 import fs from 'fs'
 import { nanoid } from 'nanoid'

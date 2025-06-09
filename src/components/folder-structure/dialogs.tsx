@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import type { DialogProps } from "@/types/interfaces"
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Download, FileJson, FileText, FolderTree, FolderArchive } from "lucide-react"
 
 export function ClearDialog({ open, onOpenChange, onClear }: DialogProps) {
     return (
@@ -37,7 +38,13 @@ export function ClearDialog({ open, onOpenChange, onClear }: DialogProps) {
     )
 }
 
-export function ExportDialog({ open, onOpenChange, onExport }: DialogProps) {
+interface ExportDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onExport?: (format: "json" | "text" | "tree" | "zip" | "directory") => void
+}
+
+export function ExportDialog({ open, onOpenChange, onExport }: ExportDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -47,16 +54,29 @@ export function ExportDialog({ open, onOpenChange, onExport }: DialogProps) {
                 </DialogHeader>
                 <div className="grid grid-cols-3 gap-4 py-4">
                     <Button variant="outline" onClick={() => onExport?.("json")} className="h-20 flex-col gap-2">
+                        <FileJson className="h-5 w-5" />
                         <span className="font-semibold">JSON</span>
                         <span className="text-xs text-muted-foreground">Machine readable format</span>
                     </Button>
                     <Button variant="outline" onClick={() => onExport?.("tree")} className="h-20 flex-col gap-2">
+                        <FolderTree className="h-5 w-5" />
                         <span className="font-semibold">Tree</span>
                         <span className="text-xs text-muted-foreground">Tree view format</span>
                     </Button>
                     <Button variant="outline" onClick={() => onExport?.("text")} className="h-20 flex-col gap-2">
+                        <FileText className="h-5 w-5" />
                         <span className="font-semibold">Directory</span>
                         <span className="text-xs text-muted-foreground">Directory format</span>
+                    </Button>
+                    <Button variant="outline" onClick={() => onExport?.("zip")} className="h-20 flex-col gap-2">
+                        <FolderArchive className="h-5 w-5" />
+                        <span className="font-semibold">ZIP</span>
+                        <span className="text-xs text-muted-foreground">Download as ZIP</span>
+                    </Button>
+                    <Button variant="outline" onClick={() => onExport?.("directory")} className="h-20 flex-col gap-2">
+                        <Download className="h-5 w-5" />
+                        <span className="font-semibold">Directory</span>
+                        <span className="text-xs text-muted-foreground">Download as folder</span>
                     </Button>
                 </div>
                 <DialogFooter>

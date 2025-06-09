@@ -103,7 +103,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                             <div className="flex gap-2 items-center">
                                 <FrameworkStructure
                                     onFrameworkSelect={handleFrameworkSelect}
-                                    selectedFramework={selectedFramework ? { framework: selectedFramework } : null}
+                                    selectedFramework={selectedFramework ? { framework: selectedFramework } : undefined}
                                     isLoading={isFrameworkLoading}
                                 />
                                 <ModeToggle />
@@ -160,19 +160,19 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                     <div className="h-full flex flex-col">
                         <div className="flex-1 overflow-y-auto p-4">
                             <Tabs defaultValue="structure-preview" className="w-full h-full">
-                                <TabsList className="w-full grid grid-cols-2 mb-4 h-full">
-                                    <TabsTrigger 
+                                <TabsList className="w-full grid grid-cols-2 mb-4">
+                                    <TabsTrigger
                                         value="structure-preview"
                                     >
                                         Structure Preview
                                     </TabsTrigger>
-                                    <TabsTrigger 
-                                        value="ai-generate" 
+                                    <TabsTrigger
+                                        value="ai-generate"
                                         disabled={true}
-                                        className={`relative group ${false ? 'opacity-50 cursor-not-allowed' : 'opacity-100'}`}
+                                        className="relative group opacity-100"
                                     >
-                                        AI Generate
-                                        <Badge className={`${true ? 'opacity-100' : 'opacity-0'}`} >
+                                        Generate
+                                        <Badge className="opacity-100">
                                             Dev
                                         </Badge>
                                     </TabsTrigger>

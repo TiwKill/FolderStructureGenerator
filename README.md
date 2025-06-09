@@ -10,7 +10,7 @@ A modern, interactive web application for creating and visualizing project folde
 - 🎯 Drag-and-drop interface
 - ⌨️ Keyboard shortcuts for quick actions
 - 📋 Copy, cut, paste, and delete operations
-- 📤 Export structures as JSON or tree format
+- 📤 Export structures as JSON, tree format, or actual files/folders
 - 📥 Import existing structures
 - 🌓 Light/Dark mode support
 - 💾 Auto-save functionality
@@ -18,6 +18,7 @@ A modern, interactive web application for creating and visualizing project folde
 - 🎁 Framework-specific templates
 - 🔧 Automatic project scaffolding
 - 📱 Responsive design with horizontal scrolling tabs
+- ⚙️ Customizable framework options
 
 ## 🎁 Supported Frameworks
 
@@ -32,11 +33,51 @@ Generate instant project structures for popular frameworks:
 - Remix
 - Astro
 
+### Framework Options
+
+Each framework template can be customized with the following options:
+
+- **TypeScript** - Enable TypeScript support and configuration
+- **Tailwind CSS** - Include Tailwind CSS setup and configuration
+- **ESLint** - Add ESLint configuration for code quality
+
+These options can be toggled in the framework selection dropdown menu, allowing you to customize your project structure based on your needs.
+
 Each framework template includes:
 - Standard project layout
 - Essential configuration files
 - Common directories (components, pages, etc.)
 - Framework-specific files and folders
+- Optional TypeScript, Tailwind CSS, and ESLint configurations
+
+## 📤 Export Options
+
+The application supports multiple export formats:
+
+1. **JSON Format**
+   - Machine-readable format
+   - Perfect for importing into other tools
+   - Preserves all structure metadata
+
+2. **Tree Format**
+   - Visual tree representation
+   - Easy to read and share
+   - Shows hierarchical relationships
+
+3. **Directory Format**
+   - Simple text-based format
+   - Shows folder/file hierarchy
+   - Easy to copy and paste
+
+4. **ZIP Download**
+   - Downloads the structure as a ZIP file
+   - Creates empty files and folders
+   - Ready to use in your project
+
+5. **Directory Download**
+   - Downloads the structure as a folder
+   - Creates actual files and folders
+   - Perfect for starting a new project
 
 ## ⚡ Keyboard Shortcuts
 
