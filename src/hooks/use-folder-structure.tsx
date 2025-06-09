@@ -55,6 +55,21 @@ export const useFolderStructure = (tabId?: string) => {
         return tabId ? `${STORAGE_KEY_PREFIX}${tabId}` : STORAGE_KEY_PREFIX + "default"
     }, [tabId])
 
+    // Utility function to generate new IDs recursively
+    const generateNewIds = useCallback((item: FileItem): FileItem => {
+        const newId = `${item.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+        const newItem: FileItem = {
+            ...item,
+            id: newId,
+            children: item.children ? item.children.map((child) => generateNewIds(child)) : undefined,
+        }
+
+        console.log(`Generated new ID for ${item.name}: ${item.id} -> ${newId}`)
+
+        return newItem
+    }, [])
+
     // Load data from localStorage
     useEffect(() => {
         if (typeof window === "undefined") return
@@ -370,11 +385,16 @@ export const useFolderStructure = (tabId?: string) => {
             updateStructure((prev) => {
                 const pasteToItem = (item: FileItem): FileItem => {
                     if (item.id === parentId) {
+                        // Generate new items with new IDs and unique names
                         const newItems = clipboard.items.map((clipboardItem) => {
+                            // Generate unique name first
                             const uniqueName = generateUniqueNameForNewItem(item.children || [], clipboardItem.name)
+
+                            // Generate new IDs recursively for the item and all its children
+                            const itemWithNewIds = generateNewIds(clipboardItem)
+
                             return {
-                                ...clipboardItem,
-                                id: `${clipboardItem.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                ...itemWithNewIds,
                                 name: uniqueName,
                             }
                         })
@@ -395,6 +415,7 @@ export const useFolderStructure = (tabId?: string) => {
                 return pasteToItem(prev)
             })
 
+            // For cut operation, delete original items
             if (clipboard.operation === "cut") {
                 const idsToDelete = clipboard.items.map((item) => item.id)
                 onDelete(idsToDelete)
@@ -403,7 +424,7 @@ export const useFolderStructure = (tabId?: string) => {
             const itemNames = clipboard.items.map((item) => item.name).join(", ")
             setClipboard(null)
         },
-        [clipboard, updateStructure, onDelete],
+        [clipboard, updateStructure, onDelete, generateNewIds],
     )
 
     const onExport = useCallback(() => {
@@ -419,7 +440,10 @@ export const useFolderStructure = (tabId?: string) => {
             try {
                 const content = e.target?.result as string
                 const imported = importStructure(content)
-                pushToHistory(imported)
+                // Generate new IDs for imported structure to avoid conflicts
+                const importedWithNewIds = generateNewIds(imported)
+
+                pushToHistory(importedWithNewIds)
                 toast.success("Structure imported successfully")
             } catch (error) {
                 toast.error("Failed to import structure")
@@ -427,7 +451,7 @@ export const useFolderStructure = (tabId?: string) => {
         }
         reader.readAsText(file)
     },
-        [pushToHistory],
+        [pushToHistory, generateNewIds],
     )
 
     const handleError = useCallback((message: string) => {
@@ -624,7 +648,7 @@ export const useFolderStructure = (tabId?: string) => {
                         newStructure = removeItemsFromStructure(newStructure, itemIds)
                     }
 
-                    // Add items to target
+                    // Add items to target with new IDs if moving to different parent
                     newStructure = addItemsToStructure(
                         newStructure,
                         targetParentId,
@@ -685,17 +709,33 @@ export const useFolderStructure = (tabId?: string) => {
                         newChildren = newChildren.filter((child) => !excludeIds.includes(child.id))
                     }
 
-                    // Create new items with appropriate names
-                    const itemsToAdd = draggedItems.map((draggedItem) => ({
-                        ...draggedItem,
-                        id: `${draggedItem.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                        name: generateUniqueName(
+                    // Create new items with appropriate names and IDs
+                    const itemsToAdd = draggedItems.map((draggedItem) => {
+                        const uniqueName = generateUniqueName(
                             targetChildren,
                             draggedItem.name,
                             draggedItem.name, // Pass original name
                             isSameParent, // Pass whether moving to same parent
-                        ),
-                    }))
+                        )
+
+                        // Generate new IDs only if moving to different parent
+                        if (!isSameParent) {
+                            const itemWithNewIds = generateNewIds(draggedItem)
+                            console.log(
+                                `Drag & Drop: Generated new ID for ${draggedItem.name}: ${draggedItem.id} -> ${itemWithNewIds.id}`,
+                            )
+                            return {
+                                ...itemWithNewIds,
+                                name: uniqueName,
+                            }
+                        } else {
+                            // Same parent, keep original IDs
+                            return {
+                                ...draggedItem,
+                                name: uniqueName,
+                            }
+                        }
+                    })
 
                     if (insertIndex >= 0 && insertIndex <= newChildren.length) {
                         // Insert at specific position
@@ -720,7 +760,7 @@ export const useFolderStructure = (tabId?: string) => {
             }
             return addToItem(structure)
         },
-        [],
+        [generateNewIds],
     )
 
     const onUndo = useCallback(() => {
