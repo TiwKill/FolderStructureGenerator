@@ -65,8 +65,6 @@ export const useFolderStructure = (tabId?: string) => {
             children: item.children ? item.children.map((child) => generateNewIds(child)) : undefined,
         }
 
-        console.log(`Generated new ID for ${item.name}: ${item.id} -> ${newId}`)
-
         return newItem
     }, [])
 
@@ -721,9 +719,6 @@ export const useFolderStructure = (tabId?: string) => {
                         // Generate new IDs only if moving to different parent
                         if (!isSameParent) {
                             const itemWithNewIds = generateNewIds(draggedItem)
-                            console.log(
-                                `Drag & Drop: Generated new ID for ${draggedItem.name}: ${draggedItem.id} -> ${itemWithNewIds.id}`,
-                            )
                             return {
                                 ...itemWithNewIds,
                                 name: uniqueName,
