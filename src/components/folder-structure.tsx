@@ -1,11 +1,11 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { Keyboard } from "lucide-react"
+import { Keyboard, Undo2, Redo2 } from "lucide-react"
 import FileFolder from "./folder-structure/file-folder"
 import ProfileCard from "./folder-structure/profile-card"
 import { ModeToggle } from "./mode-toggle"
 import { ClearDialog, ExportDialog, ShortcutsDialog } from "./folder-structure/dialogs"
-import { useFolderStructure } from "./folder-structure/use-folder-structure"
+import { useFolderStructure } from "../hooks/use-folder-structure"
 import FrameworkStructure from "./framework-structure"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FolderStructureSkeleton, StructurePreviewSkeleton } from "./folder-structure/skeleton-loader"
@@ -29,6 +29,8 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         selectedFramework,
         isLoading,
         isFrameworkLoading,
+        canUndo,
+        canRedo,
         setOpenFolders,
         setCurrentEditingId,
         setShowClearDialog,
@@ -52,6 +54,8 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         handleFrameworkSelect,
         selectionOrder,
         clearSelection,
+        onUndo,
+        onRedo,
     } = useFolderStructure(tabId)
 
     if (isLoading) {
@@ -100,9 +104,34 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                             <div className="flex gap-2 items-center">
                                 <FrameworkStructure
                                     onFrameworkSelect={handleFrameworkSelect}
-                                    selectedFramework={selectedFramework ? { framework: selectedFramework } : undefined}
+                                    selectedFramework={selectedFramework ? { framework: selectedFramework } : null}
                                     isLoading={isFrameworkLoading}
                                 />
+                                
+                                {/* Undo/Redo buttons */}
+                                <div className="flex gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={onUndo}
+                                        disabled={!canUndo}
+                                        className="gap-2"
+                                        title="Undo (Ctrl+Z)"
+                                    >
+                                        <Undo2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={onRedo}
+                                        disabled={!canRedo}
+                                        className="gap-2"
+                                        title="Redo (Ctrl+Y)"
+                                    >
+                                        <Redo2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+
                                 <ModeToggle />
                                 <Button variant="ghost" size="sm" className="gap-2" onClick={() => setShowShortcutsDialog(true)}>
                                     <Keyboard className="w-4 h-4" />

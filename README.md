@@ -7,18 +7,20 @@ A modern, interactive web application for creating and visualizing project folde
 ## ✨ Features
 
 - 🌳 Visual folder structure creation and management
-- 🎯 Drag-and-drop interface
+- 🎯 Drag-and-drop interface for moving items and tabs
+- 🔄 Undo / Redo support
 - ⌨️ Keyboard shortcuts for quick actions
+- 📦 Multi-select and batch actions
+- ✏️ Rename items and tabs via double-click
+- 🧠 Intelligent folder nesting via drag-and-drop
 - 📋 Copy, cut, paste, and delete operations
-- 📤 Export structures as JSON, tree format, or actual files/folders
+- 📤 Export structures as JSON, tree format, ZIP, or folder
 - 📥 Import existing structures
 - 🌓 Light/Dark mode support
 - 💾 Auto-save functionality
 - 🔄 Real-time structure preview
-- 🎁 Framework-specific templates
-- 🔧 Automatic project scaffolding
+- 🎁 Framework-specific templates with custom options
 - 📱 Responsive design with horizontal scrolling tabs
-- ⚙️ Customizable framework options
 
 ## 🎁 Supported Frameworks
 
@@ -79,12 +81,38 @@ The application supports multiple export formats:
    - Creates actual files and folders
    - Perfect for starting a new project
 
+## ⚙️ Interactions
+
+### 🖱️ Item Management
+
+- **Drag & Drop** — Move items into folders
+- **Double Click** — Rename items
+- **Multi-select** —  
+  - `Ctrl/Cmd + Click` to select/deselect individual items  
+  - `Ctrl/Cmd + A` to select all  
+  - `Esc` to clear selection
+- **Keyboard Shortcuts**:  
+  - `⌘/Ctrl + C` — Copy  
+  - `⌘/Ctrl + X` — Cut  
+  - `⌘/Ctrl + V` — Paste  
+  - `Delete` — Delete  
+
+### 🗂️ Tab & Framework Handling
+
+- **Drag & Drop (Tabs)** — Reorder framework tabs
+- **Double Click (Tab)** — Rename tab
+- **Click Framework Selector** — Pick or customize framework template
+- **Customizable Options** — TypeScript, Tailwind CSS, ESLint, Import Alias
+
 ## ⚡ Keyboard Shortcuts
 
-- `⌘/Ctrl + C` - Copy selected item
-- `⌘/Ctrl + X` - Cut selected item
-- `⌘/Ctrl + V` - Paste into selected folder
-- `Delete` - Delete selected item
+- `⌘/Ctrl + C` — Copy selected item  
+- `⌘/Ctrl + X` — Cut selected item  
+- `⌘/Ctrl + V` — Paste into selected folder  
+- `⌘/Ctrl + A` — Select all items  
+- `F2` — Rename selected item  
+- `Delete` — Delete selected item  
+- `Esc` — Deselect all  
 
 ## 🚀 Getting Started
 

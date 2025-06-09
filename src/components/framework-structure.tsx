@@ -46,8 +46,6 @@ export default function FrameworkStructure({
             "Would you like your code inside a `src/` directory?": false,
             "Would you like to use App Router? (recommended)": true,
             "Would you like to use Turbopack for `next dev`?": false,
-            "Would you like to customize the import alias (`@/*` by default)?": false,
-            "What import alias would you like configured?": "@/*",
         },
         React: {
             "Include components folder": true,
@@ -114,7 +112,7 @@ export default function FrameworkStructure({
     // Detect mobile screen size
     useEffect(() => {
         const checkIsMobile = () => {
-            setIsMobile(window.innerWidth < 768) // md breakpoint
+            setIsMobile(window.innerWidth < 768)
         }
 
         checkIsMobile()
@@ -141,8 +139,7 @@ export default function FrameworkStructure({
             const customizedStructure = applyFrameworkOptions(baseStructure, framework, frameworkOptions[framework])
 
             onFrameworkSelect?.(customizedStructure)
-            setShowOptionsDialog(false) // Close dialog after applying
-            toast.success(`${framework} template loaded with custom options`)
+            setShowOptionsDialog(false)
         } catch (error) {
             console.error("Framework selection error:", error)
             toast.error(`Failed to load ${framework} template`)
@@ -190,8 +187,6 @@ export default function FrameworkStructure({
         const useSrcDirectory = options["Would you like your code inside a `src/` directory?"] as boolean
         const useAppRouter = options["Would you like to use App Router? (recommended)"] as boolean
         const useTurbopack = options["Would you like to use Turbopack for `next dev`?"] as boolean
-        const customizeImportAlias = options["Would you like to customize the import alias (`@/*` by default)?"] as boolean
-        const importAlias = options["What import alias would you like configured?"] as string
 
         // Update project name to reflect configuration
         structure.name = `nextjs-project${useTypeScript ? "-ts" : "-js"}`
@@ -307,25 +302,6 @@ export default function FrameworkStructure({
                 name: "README-turbopack.md",
                 type: "file",
             })
-        }
-
-        // Handle custom import alias
-        if (customizeImportAlias && importAlias !== "@/*") {
-            // This would typically modify tsconfig.json or jsconfig.json
-            const configFile = {
-                id: "path-config-1",
-                name: useTypeScript ? "tsconfig.json" : "jsconfig.json",
-                type: "file",
-            }
-
-            // Update existing config or add new one
-            const existingConfig = structure.children?.find(
-                (child: any) => child.name === "tsconfig.json" || child.name === "jsconfig.json",
-            )
-
-            if (!existingConfig) {
-                structure.children?.push(configFile)
-            }
         }
 
         // Update next.config file extension based on TypeScript choice
@@ -566,8 +542,6 @@ export default function FrameworkStructure({
             defaultOptions["Would you like your code inside a `src/` directory?"] = false
             defaultOptions["Would you like to use App Router? (recommended)"] = true
             defaultOptions["Would you like to use Turbopack for `next dev`?"] = false
-            defaultOptions["Would you like to customize the import alias (`@/*` by default)?"] = false
-            defaultOptions["What import alias would you like configured?"] = "@/*"
         } else {
             // For other frameworks, set all to true
             Object.keys(defaultOptions).forEach((key) => {
@@ -581,8 +555,6 @@ export default function FrameworkStructure({
             ...prev,
             [framework]: defaultOptions,
         }))
-
-        toast.success(`${framework} options reset to defaults`)
     }
 
     // Render options content (shared between submenu and dialog)
@@ -590,29 +562,6 @@ export default function FrameworkStructure({
         <div className="space-y-4">
             <div className="space-y-3">
                 {Object.entries(frameworkOptions[framework] || {}).map(([option, value]) => {
-                    // Special handling for import alias input
-                    if (option === "What import alias would you like configured?") {
-                        const isCustomizeEnabled = frameworkOptions[framework][
-                            "Would you like to customize the import alias (`@/*` by default)?"
-                        ] as boolean
-
-                        return (
-                            <div key={option} className="space-y-2">
-                                <Label htmlFor={`${framework}-${option}`} className="text-sm font-medium">
-                                    {option}
-                                </Label>
-                                <Input
-                                    id={`${framework}-${option}`}
-                                    value={value as string}
-                                    onChange={(e) => handleOptionChange(framework, option, e.target.value)}
-                                    disabled={!isCustomizeEnabled}
-                                    className="h-8 text-sm"
-                                    placeholder="@/*"
-                                />
-                            </div>
-                        )
-                    }
-
                     // Regular checkbox options
                     return (
                         <div key={option} className="flex items-center space-x-3">
@@ -633,12 +582,10 @@ export default function FrameworkStructure({
                 })}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
+            <div className="grid grid-cols-1 gap-2 pt-2 border-t">
                 <Button
                     onClick={() => handleFrameworkSelect(framework)}
                     disabled={isLoading}
-                    className="flex-1 h-9 text-sm"
-                    size="sm"
                 >
                     Apply Template
                 </Button>
@@ -647,8 +594,6 @@ export default function FrameworkStructure({
                     onClick={() => resetToDefaults(framework)}
                     variant="outline"
                     disabled={isLoading}
-                    className="flex-1 h-9 text-sm"
-                    size="sm"
                 >
                     Reset to Defaults
                 </Button>

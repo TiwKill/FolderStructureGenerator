@@ -12,13 +12,23 @@ import {
     importStructure,
     generateUniqueName,
     generateUniqueNameForNewItem,
-} from "./utils"
+} from "../components/folder-structure/utils"
+import { useHistory } from "./use-history"
 
 const STORAGE_KEY_PREFIX = "project-structure-data-"
 
 export const useFolderStructure = (tabId?: string) => {
     // Core state
-    const [structure, setStructure] = useState<FileItem>(createDefaultStructure())
+    const {
+        state: structure,
+        canUndo,
+        canRedo,
+        push: pushToHistory,
+        undo: undoHistory,
+        redo: redoHistory,
+        clear: clearHistory,
+    } = useHistory<FileItem>(createDefaultStructure())
+
     const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["root"]))
     const [selectedItems, setSelectedItems] = useState<string[]>([])
     const [selectionOrder, setSelectionOrder] = useState<string[]>([])
@@ -60,7 +70,7 @@ export const useFolderStructure = (tabId?: string) => {
 
                     // Load structure
                     if (parsedData.structure) {
-                        setStructure(parsedData.structure)
+                        pushToHistory(parsedData.structure)
                     }
 
                     // Load open folders state
@@ -93,7 +103,7 @@ export const useFolderStructure = (tabId?: string) => {
         }
 
         loadData()
-    }, [getStorageKey])
+    }, [getStorageKey, pushToHistory])
 
     // Save data to localStorage - แก้ไข dependency array
     const saveToLocalStorage = useCallback(() => {
@@ -105,8 +115,8 @@ export const useFolderStructure = (tabId?: string) => {
                 structure,
                 openFolders: Array.from(openFolders),
                 selectedFramework,
-                selectedItems, // Save selection state
-                selectionOrder, // Save selection order
+                selectedItems,
+                selectionOrder,
                 lastUpdated: Date.now(),
             }
 
@@ -154,9 +164,13 @@ export const useFolderStructure = (tabId?: string) => {
         return null
     }, [])
 
-    const updateStructure = useCallback((updater: (prev: FileItem) => FileItem) => {
-        setStructure(updater)
-    }, [])
+    const updateStructure = useCallback(
+        (updater: (prev: FileItem) => FileItem) => {
+            const newStructure = updater(structure)
+            pushToHistory(newStructure)
+        },
+        [structure, pushToHistory],
+    )
 
     // Fixed selection logic to prevent duplicate entries
     const handleSelect = useCallback(
@@ -204,6 +218,8 @@ export const useFolderStructure = (tabId?: string) => {
             setSelectionOrder(allIds)
         }
     }, [structure])
+
+
 
     // Helper function for clear selection
     const clearSelection = useCallback(() => {
@@ -401,21 +417,24 @@ export const useFolderStructure = (tabId?: string) => {
             try {
                 const content = e.target?.result as string
                 const imported = importStructure(content)
-                setStructure(imported)
+                pushToHistory(imported)
                 toast.success("Structure imported successfully")
             } catch (error) {
                 toast.error("Failed to import structure")
             }
         }
         reader.readAsText(file)
-    }, [])
+    },
+        [pushToHistory],
+    )
 
     const handleError = useCallback((message: string) => {
         toast.error(message)
     }, [])
 
     const handleClearStructure = useCallback(() => {
-        setStructure(createDefaultStructure())
+        const defaultStructure = createDefaultStructure()
+        pushToHistory(defaultStructure)
         setOpenFolders(new Set(["root"]))
         setSelectedItems([])
         setSelectionOrder([])
@@ -423,7 +442,7 @@ export const useFolderStructure = (tabId?: string) => {
         setSelectedFramework(null)
         setShowClearDialog(false)
         toast.success("Structure cleared")
-    }, [])
+    }, [pushToHistory])
 
     const handleExport = useCallback(
         (format: "json" | "text" | "tree" | "zip" | "directory") => {
@@ -440,7 +459,7 @@ export const useFolderStructure = (tabId?: string) => {
             // Simulate loading time for framework
             await new Promise((resolve) => setTimeout(resolve, 300))
 
-            setStructure(newStructure)
+            pushToHistory(newStructure)
             setSelectedFramework(newStructure.name)
             setOpenFolders(new Set(["root"]))
             setSelectedItems([])
@@ -452,7 +471,9 @@ export const useFolderStructure = (tabId?: string) => {
         } finally {
             setIsFrameworkLoading(false)
         }
-    }, [])
+    },
+        [pushToHistory],
+    )
 
     // Keyboard shortcuts - ใช้ helper functions
     useEffect(() => {
@@ -700,6 +721,18 @@ export const useFolderStructure = (tabId?: string) => {
         [],
     )
 
+    const onUndo = useCallback(() => {
+        if (canUndo) {
+            undoHistory()
+        }
+    }, [canUndo, undoHistory])
+
+    const onRedo = useCallback(() => {
+        if (canRedo) {
+            redoHistory()
+        }
+    }, [canRedo, redoHistory])
+
     return {
         // State
         structure,
@@ -715,6 +748,8 @@ export const useFolderStructure = (tabId?: string) => {
         selectedFramework,
         isLoading,
         isFrameworkLoading,
+        canUndo,
+        canRedo,
 
         // Setters
         setOpenFolders,
@@ -741,6 +776,8 @@ export const useFolderStructure = (tabId?: string) => {
         handleDrop,
         handleFrameworkSelect,
         clearSelection,
-        selectAllItems, // เพิ่ม helper function
+        selectAllItems,
+        onUndo,
+        onRedo,
     }
 }
