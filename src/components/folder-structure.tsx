@@ -192,7 +192,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                             {isFrameworkLoading ? (
                                 <StructurePreviewSkeleton />
                             ) : (
-                                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md overflow-hidden">
+                                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-md overflow-hidden">
                                     <ScrollArea className="h-64 sm:h-80 lg:h-full w-full">
                                         <pre className="text-xs font-mono whitespace-pre p-3 min-w-max">{treeViewDisplay}</pre>
                                     </ScrollArea>
