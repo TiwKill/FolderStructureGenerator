@@ -12,7 +12,7 @@ A modern, interactive web application for creating and visualizing project folde
 - ⌨️ Keyboard shortcuts for quick actions
 - 📦 Multi-select and batch actions
 - ✏️ Rename items and tabs via double-click
-= 💬 Comment on folders or files for better collaboration or reminders
+- 💬 Comment on folders or files for better collaboration or reminders
 - 🧠 Intelligent folder nesting via drag-and-drop
 - 📋 Copy, cut, paste, and delete operations
 - 📤 Export structures as JSON, tree format, ZIP, or folder
