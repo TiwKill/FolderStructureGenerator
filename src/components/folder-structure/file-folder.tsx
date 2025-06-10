@@ -8,6 +8,7 @@ import {
     ContextMenuSeparator,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import {
     Folder,
@@ -21,8 +22,10 @@ import {
     Download,
     Upload,
     X,
+    MessageSquare,
 } from "lucide-react"
 import { getFileIcon } from "./utils"
+import { CommentDialog } from "./dialogs/comment-dialog"
 import type { FileItem, ClipboardItem } from "@/types/interfaces"
 
 interface FileFolderProps {
@@ -52,6 +55,7 @@ interface FileFolderProps {
     parentId: string | null
     selectionOrder: string[]
     onClearSelection?: () => void
+    onUpdateComment: (id: string, comment: string) => void
 }
 
 const FileFolder: React.FC<FileFolderProps> = ({
@@ -81,11 +85,14 @@ const FileFolder: React.FC<FileFolderProps> = ({
     parentId,
     selectionOrder,
     onClearSelection,
+    onUpdateComment,
 }) => {
     const [editName, setEditName] = useState<string>(item.name)
     const [showInfo, setShowInfo] = useState<boolean>(false)
     const [inputWidth, setInputWidth] = useState<string>("auto")
     const [dragPosition, setDragPosition] = useState<"before" | "after" | "inside" | null>(null)
+    const [showCommentDialog, setShowCommentDialog] = useState(false)
+    const [showCommentPopover, setShowCommentPopover] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
     const measureRef = useRef<HTMLSpanElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -160,6 +167,14 @@ const FileFolder: React.FC<FileFolderProps> = ({
     const startRename = () => {
         setEditName(item.name)
         setCurrentEditingId(item.id)
+    }
+
+    const handleCommentSave = (comment: string) => {
+        onUpdateComment(item.id, comment)
+    }
+
+    const handleCommentDelete = () => {
+        onUpdateComment(item.id, "")
     }
 
     const handleDragStart = (e: React.DragEvent) => {
@@ -360,11 +375,81 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                     {item.name}
                                 </span>
                             )}
+
+                            {/* Comment indicator */}
+                            {item.comment && (
+                                <Popover open={showCommentPopover} onOpenChange={setShowCommentPopover}>
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            className="p-1 rounded-full hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setShowCommentPopover(true)
+                                            }}
+                                            aria-label="View comment"
+                                        >
+                                            <MessageSquare className="w-4 h-4 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300" />
+                                        </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                        className="w-80 p-4 rounded-lg shadow-lg border bg-background"
+                                        align="start"
+                                        side="bottom"
+                                    >
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <MessageSquare className="w-4 h-4 text-blue-500" />
+                                                    <h3 className="font-medium text-sm">Comment</h3>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setShowCommentPopover(false)
+                                                            setShowCommentDialog(true)
+                                                        }}
+                                                        className="p-1 rounded hover:bg-accent text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                                                        aria-label="Edit comment"
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setShowCommentPopover(false)
+                                                        }}
+                                                        className="p-1 rounded hover:bg-accent text-muted-foreground transition-colors"
+                                                        aria-label="Close popover"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-muted/50 rounded p-3">
+                                                <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                                                    {item.comment}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                                <span>{item.type === 'folder' ? 'Folder' : 'File'} comment</span>
+                                                <span>{item.comment.length}/500 characters</span>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            )}
                         </div>
+
                         {showInfo && !isEditing && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate max-w-32">{currentPath}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto truncate hidden sm:block max-w-26 sm:max-w-48">
+                                {currentPath}
+                            </span>
                         )}
-                        {/* แสดงหมายเลขอันดับเฉพาะเมื่อเลือกมากกว่า 1 รายการ */}
+
+                        {/* Show selection order number when more than 1 item is selected */}
                         {selectionOrderNumber && (
                             <span className="text-xs bg-blue-500 text-white rounded-full px-1.5 py-0.5 ml-2 min-w-[20px] text-center font-medium">
                                 {selectionOrderNumber}
@@ -412,6 +497,14 @@ const FileFolder: React.FC<FileFolderProps> = ({
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
+                        onClick={() => setShowCommentDialog(true)}
+                        className="gap-2"
+                        disabled={selectedItems.length > 1}
+                    >
+                        <MessageSquare className="w-4 h-4" />
+                        {item.comment ? "Edit Comment" : "Add Comment"}
+                    </ContextMenuItem>
+                    <ContextMenuItem
                         onClick={() => {
                             setEditName(item.name)
                             setCurrentEditingId(item.id)
@@ -437,6 +530,17 @@ const FileFolder: React.FC<FileFolderProps> = ({
                     )}
                 </ContextMenuContent>
             </ContextMenu>
+
+            {/* Comment Dialog */}
+            <CommentDialog
+                open={showCommentDialog}
+                onOpenChange={setShowCommentDialog}
+                itemName={item.name}
+                itemType={item.type}
+                currentComment={item.comment}
+                onSave={handleCommentSave}
+                onDelete={item.comment ? handleCommentDelete : undefined}
+            />
 
             {item.type === "folder" && item.children && isOpen && (
                 <div className="ml-4 pl-4 border-l border-gray-200 dark:border-gray-700">
@@ -469,6 +573,7 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                 parentId={item.id}
                                 selectionOrder={selectionOrder}
                                 onClearSelection={onClearSelection}
+                                onUpdateComment={onUpdateComment}
                             />
                         </React.Fragment>
                     ))}

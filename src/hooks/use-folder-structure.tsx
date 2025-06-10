@@ -352,6 +352,34 @@ export const useFolderStructure = (tabId?: string) => {
         [updateStructure],
     )
 
+    // New function to update comment
+    const onUpdateComment = useCallback(
+        (id: string, comment: string) => {
+            updateStructure((prev) => {
+                const updateCommentInItem = (item: FileItem): FileItem => {
+                    if (item.id === id) {
+                        return { ...item, comment: comment || undefined }
+                    }
+                    if (item.children) {
+                        return {
+                            ...item,
+                            children: item.children.map(updateCommentInItem),
+                        }
+                    }
+                    return item
+                }
+                return updateCommentInItem(prev)
+            })
+
+            if (comment.trim()) {
+                toast.success("Comment updated")
+            } else {
+                toast.success("Comment removed")
+            }
+        },
+        [updateStructure],
+    )
+
     const onCopy = useCallback(
         (ids: string | string[]) => {
             const idsToProcess = Array.isArray(ids) ? ids : [ids]
@@ -780,16 +808,16 @@ export const useFolderStructure = (tabId?: string) => {
             }
             return 'tree'
         })
-    
+
         useEffect(() => {
             localStorage.setItem(STORAGE_KEY, format)
         }, [format])
-    
+
         return {
             format,
             setFormat
         }
-    } 
+    }
 
     // Preview Format
     const { format: previewFormat, setFormat: setPreviewFormat } = usePreviewFormatDialog()
@@ -860,5 +888,6 @@ export const useFolderStructure = (tabId?: string) => {
         selectAllItems,
         onUndo,
         onRedo,
+        onUpdateComment,
     }
 }

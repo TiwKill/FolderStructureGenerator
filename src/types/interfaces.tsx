@@ -8,6 +8,7 @@ export interface FileItem {
     size?: number
     dateModified?: Date
     dateCreated?: Date
+    comment?: string
 }
 
 export interface ClipboardItem {
@@ -34,18 +35,6 @@ export interface DialogProps {
     onOpenChange: (open: boolean) => void
     onClear?: () => void
     onExport?: (format: "json" | "text" | "tree" | "zip" | "directory") => void
-}
-
-export interface DuplicateFileOptions {
-    action: "replace" | "keep_both" | "skip" | "rename"
-    newName?: string
-    applyToAll?: boolean
-}
-
-export interface FileConflictDialog extends DialogProps {
-    sourceItem: FileItem
-    targetFolder: FileItem
-    onResolve: (option: DuplicateFileOptions) => void
 }
 
 // Enhanced interfaces for new features

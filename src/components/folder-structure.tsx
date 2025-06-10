@@ -61,6 +61,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
         clearSelection,
         onUndo,
         onRedo,
+        onUpdateComment,
     } = useFolderStructure(tabId)
 
     if (isLoading) {
@@ -181,6 +182,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                 parentId={null}
                                 selectionOrder={selectionOrder}
                                 onClearSelection={clearSelection}
+                                onUpdateComment={onUpdateComment}
                             />
                         )}
                     </div>
