@@ -352,7 +352,7 @@ export const useFolderStructure = (tabId?: string) => {
         [updateStructure],
     )
 
-    // New function to update comment
+    // Update comment
     const onUpdateComment = useCallback(
         (id: string, comment: string) => {
             updateStructure((prev) => {
@@ -370,12 +370,6 @@ export const useFolderStructure = (tabId?: string) => {
                 }
                 return updateCommentInItem(prev)
             })
-
-            if (comment.trim()) {
-                toast.success("Comment updated")
-            } else {
-                toast.success("Comment removed")
-            }
         },
         [updateStructure],
     )
