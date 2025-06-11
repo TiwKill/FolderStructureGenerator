@@ -10,15 +10,10 @@ import {
     Database,
     Archive,
 } from "lucide-react"
-import type { FileItem, FileIcon } from "@/types/interfaces"
 
-export const INITIAL_STRUCTURE: FileItem = {
-    id: "root",
-    name: "Project",
-    type: "folder",
-    children: [],
-}
+import type { FileIcon } from "@/types/interfaces"
 
+// File Icons
 export const FILE_ICONS: Record<string, FileIcon> = {
     // Images
     png: { icon: ImageIcon, color: "text-blue-500" },
@@ -71,16 +66,4 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     "package.json": { icon: Package, color: "text-red-500" },
     "composer.json": { icon: Package, color: "text-blue-500" },
     "requirements.txt": { icon: Package, color: "text-green-500" },
-}
-
-// Make sure framework names match exactly with the generators
-export const frameworks = [
-    { name: "Next.js" },
-    { name: "React" },
-    { name: "Vue.js" },
-    { name: "Angular" },
-    { name: "Svelte" },
-    { name: "Nuxt.js" },
-    { name: "Remix" },
-    { name: "Astro" },
-]
+}               

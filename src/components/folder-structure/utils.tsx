@@ -1,4 +1,4 @@
-import { FILE_ICONS } from "./constants"
+import { FILE_ICONS } from "@/components/constants/file-icons-constant"
 import { File } from "lucide-react"
 import type { FileItem, FileIcon } from "@/types/interfaces"
 import { downloadAsZip, downloadAsDirectory } from "@/utils/folder-generator"
@@ -18,13 +18,6 @@ export const getFileIcon = (filename: string): FileIcon => {
     const extension = lowerFilename.split(".").pop()
     return extension && FILE_ICONS[extension] ? FILE_ICONS[extension] : { icon: File, color: "text-gray-500" }
 }
-
-export const createDefaultStructure = (): FileItem => ({
-    id: "root",
-    name: "project",
-    type: "folder",
-    children: [],
-})
 
 export const generateStructureDisplay = (structure: FileItem, indent = ""): string => {
     let result = ""

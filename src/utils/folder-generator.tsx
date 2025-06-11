@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import type { FileItem } from "@/types/interfaces"
 
+// Parse structure from string
 export function parseStructureFromString(structureString: string): FileItem[] {
     const lines = structureString
         .split('\n')
@@ -56,11 +57,13 @@ export function parseStructureFromString(structureString: string): FileItem[] {
     return root
 }
 
+// Extract structure from markdown
 export function extractStructureFromMarkdown(markdown: string): string | null {
     const match = markdown.match(/```\n([\s\S]*?)\n```/)
     return match ? match[1] : null
 }
 
+// Create zip from structure
 export async function createZipFromStructure(structure: FileItem[]): Promise<Blob> {
     const zip = new JSZip()
     
@@ -86,6 +89,7 @@ export async function createZipFromStructure(structure: FileItem[]): Promise<Blo
     return await zip.generateAsync({ type: 'blob' })
 }
 
+// Download as zip
 export function downloadAsZip(structure: FileItem[], filename: string = 'project-structure.zip') {
     createZipFromStructure(structure).then(blob => {
         const url = URL.createObjectURL(blob)
@@ -99,6 +103,7 @@ export function downloadAsZip(structure: FileItem[], filename: string = 'project
     })
 }
 
+// Download as directory
 export function downloadAsDirectory(structure: FileItem, filename: string = 'project-structure') {
     // Create zip from the structure, making sure to include the root folder
     createZipFromStructure([{

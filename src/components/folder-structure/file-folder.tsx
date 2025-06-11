@@ -25,7 +25,7 @@ import {
     MessageSquare,
 } from "lucide-react"
 import { getFileIcon } from "./utils"
-import { CommentDialog } from "./dialogs/comment-dialog"
+import { CommentDialog } from "../dialogs/comment-dialog"
 import type { FileItem, ClipboardItem } from "@/types/interfaces"
 
 interface FileFolderProps {
@@ -426,7 +426,7 @@ const FileFolder: React.FC<FileFolderProps> = ({
                                                     </button>
                                                 </div>
                                             </div>
-
+                 
                                             <div className="bg-muted/50 rounded p-3">
                                                 <p className="text-sm text-foreground whitespace-pre-wrap break-words">
                                                     {item.comment}

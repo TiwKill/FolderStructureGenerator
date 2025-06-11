@@ -1,22 +1,25 @@
 import type { LucideIcon } from "lucide-react"
 
+// File Item
 export interface FileItem {
     id: string
     name: string
     type: "file" | "folder"
     children?: FileItem[]
-    size?: number
-    dateModified?: Date
-    dateCreated?: Date
     comment?: string
+    dateCreated?: Date
+    dateModified?: Date
+    size?: number
 }
 
+// Clipboard Item
 export interface ClipboardItem {
     items: FileItem[]
     operation: "copy" | "cut"
     timestamp: number
 }
 
+// Framework Structure
 export interface FrameworkStructureProps {
     onFrameworkSelect?: (structure: FileItem) => void
     selectedFramework?: {
@@ -25,11 +28,13 @@ export interface FrameworkStructureProps {
     isLoading?: boolean
 }
 
+// File Icon
 export interface FileIcon {
     icon: LucideIcon
     color: string
 }
 
+// Dialog Props
 export interface DialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -37,7 +42,7 @@ export interface DialogProps {
     onExport?: (format: "json" | "text" | "tree" | "zip" | "directory") => void
 }
 
-// Enhanced interfaces for new features
+// History Action
 export interface HistoryAction {
     id: string
     type: "add" | "delete" | "rename" | "move" | "paste" | "copy" | "cut" | "update"
@@ -46,13 +51,19 @@ export interface HistoryAction {
     description: string
 }
 
-// Remove FileFolderItem - use FileItem instead
-export type FileFolderItem = FileItem
-
+// Folder Structure
 export interface FolderStructure {
     [key: string]: FolderStructure | null
 }
 
+// Export Dialog
+export interface ExportDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onExport?: (format: "json" | "text" | "tree" | "zip" | "directory") => void
+}
+
+// Structure Preview Dialog
 export interface StructurePreviewDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void

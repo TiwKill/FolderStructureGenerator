@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react'
 
+// History State
 interface HistoryState<T> {
     past: T[]
     present: T
     future: T[]
 }
 
+// Use History Hook
 export function useHistory<T>(initialPresent: T) {
     const [state, setState] = useState<HistoryState<T>>({
         past: [],

@@ -1,15 +1,28 @@
 "use client"
+
+// UI Components
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Keyboard, Undo2, Redo2, Settings2 } from "lucide-react"
+
+// Components
 import FileFolder from "./folder-structure/file-folder"
 import ProfileCard from "./folder-structure/profile-card"
 import { ModeToggle } from "./mode-toggle"
-import { ClearDialog, ExportDialog, ShortcutsDialog, StructurePreviewDialog } from "./folder-structure/dialogs/folder-structure-dialogs"
+
+// Dialogs
+import { ClearDialog } from "./dialogs/structure-clear-dialog"
+import { ExportDialog } from "./dialogs/structure-export-dialog"
+import { ShortcutsDialog } from "./dialogs/shortcuts-dialog"
+import { StructurePreviewDialog } from "./dialogs/structure-preview-dialog"
+
+// Hooks
 import { useFolderStructure } from "../hooks/use-folder-structure"
+
+// Components
 import FrameworkStructure from "./framework-structure"
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { FolderStructureSkeleton, StructurePreviewSkeleton } from "./folder-structure/skeleton-loader"
-import { ScrollArea } from "./ui/scroll-area"
 
 interface FolderStructureBuilderProps {
     tabId: string
@@ -138,10 +151,20 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                     </Button>
                                 </div>
 
+                                {/* Mode Toggle */}
                                 <ModeToggle />
-                                <Button variant="ghost" size="sm" className="gap-2" onClick={() => setShowShortcutsDialog(true)}>
+
+                                {/* Add User button */}
+                                {/* <Button variant="ghost" size="sm" className="gap-2">
+                                    <UserPlus className="w-4 h-4" />
+                                </Button> */}
+
+                                {/* Shortcuts button */}
+                                <Button variant="ghost" size="sm" className="gap-2 hidden md:block" onClick={() => setShowShortcutsDialog(true)}>
                                     <Keyboard className="w-4 h-4" />
                                 </Button>
+
+                                {/* Clear All button */}
                                 <Button
                                     variant="ghost"
                                     onClick={() => setShowClearDialog(true)}

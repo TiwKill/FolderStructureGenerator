@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Code, Loader2, Settings } from "lucide-react"
 import { getFrameworkStructure } from "./folder-structure/framework-templates"
 import type { FrameworkStructureProps } from "@/types/interfaces"
-import { frameworks } from "./folder-structure/constants"
+import { frameworks } from "@/components/constants/frameworks-constant"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
 

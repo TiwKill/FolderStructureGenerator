@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import type { FileItem, ClipboardItem, StructurePreviewDialogProps } from "@/types/interfaces"
 import {
-    createDefaultStructure,
     generateStructureDisplay,
     generateTreeView,
     exportStructure,
@@ -14,11 +13,13 @@ import {
     generateUniqueName,
     generateUniqueNameForNewItem,
 } from "../components/folder-structure/utils"
+import { INITIAL_STRUCTURE } from "@/components/constants/initial-structure-constant"
 import { useHistory } from "./use-history"
 
 const STORAGE_KEY_PREFIX = "project-structure-data-"
 const STORAGE_KEY = 'folder-structure-preview-format'
 
+// Use Folder Structure Hook
 export const useFolderStructure = (tabId?: string) => {
     // Core state
     const {
@@ -29,7 +30,7 @@ export const useFolderStructure = (tabId?: string) => {
         undo: undoHistory,
         redo: redoHistory,
         clear: clearHistory,
-    } = useHistory<FileItem>(createDefaultStructure())
+    } = useHistory<FileItem>(INITIAL_STRUCTURE())
 
     const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["root"]))
     const [selectedItems, setSelectedItems] = useState<string[]>([])
@@ -481,7 +482,7 @@ export const useFolderStructure = (tabId?: string) => {
     }, [])
 
     const handleClearStructure = useCallback(() => {
-        const defaultStructure = createDefaultStructure()
+        const defaultStructure = INITIAL_STRUCTURE()
         pushToHistory(defaultStructure)
         setOpenFolders(new Set(["root"]))
         setSelectedItems([])
