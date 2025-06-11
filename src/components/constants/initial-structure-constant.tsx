@@ -27,8 +27,7 @@ export const INITIAL_STRUCTURE = (): FileItem => ({
 - 💾 Auto-Save
 - 🔄 Live Preview
 - 🎁 Templates
-- 📱 Responsive Design
-            `,
+- 📱 Responsive Design`,
             dateCreated: new Date(),
             dateModified: new Date(),
             size: 100,
