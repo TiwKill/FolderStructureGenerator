@@ -23,6 +23,8 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     gif: { icon: ImageIcon, color: "text-blue-500" },
     svg: { icon: ImageIcon, color: "text-blue-500" },
     webp: { icon: ImageIcon, color: "text-blue-500" },
+    heic: { icon: ImageIcon, color: "text-blue-500" },
+    heif: { icon: ImageIcon, color: "text-blue-500" },
 
     // Documents
     pdf: { icon: FileText, color: "text-red-500" },
@@ -30,6 +32,13 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     docx: { icon: FileText, color: "text-blue-600" },
     txt: { icon: FileText, color: "text-gray-600" },
     md: { icon: FileText, color: "text-gray-600" },
+    xlsx: { icon: FileText, color: "text-green-500" },
+    xls: { icon: FileText, color: "text-green-500" },
+    csv: { icon: FileText, color: "text-green-500" },
+    pptx: { icon: FileText, color: "text-red-500" },
+    ppt: { icon: FileText, color: "text-red-500" },
+    ppsx: { icon: FileText, color: "text-red-500" },
+    pps: { icon: FileText, color: "text-red-500" },
 
     // Code
     js: { icon: FileCode, color: "text-yellow-500" },
@@ -66,6 +75,12 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     "7z": { icon: Archive, color: "text-yellow-600" },
     tar: { icon: Archive, color: "text-yellow-600" },
     gz: { icon: Archive, color: "text-yellow-600" },
+    "tar.gz": { icon: Archive, color: "text-yellow-600" },
+    "tar.xz": { icon: Archive, color: "text-yellow-600" },
+    "tar.bz2": { icon: Archive, color: "text-yellow-600" },
+    "tar.7z": { icon: Archive, color: "text-yellow-600" },
+    "tar.zst": { icon: Archive, color: "text-yellow-600" },
+    "tar.zstd": { icon: Archive, color: "text-yellow-600" },
 
     // Media
     mp3: { icon: Music, color: "text-green-500" },
@@ -73,6 +88,12 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     mp4: { icon: Video, color: "text-purple-500" },
     mov: { icon: Video, color: "text-purple-500" },
     avi: { icon: Video, color: "text-purple-500" },
+    mkv: { icon: Video, color: "text-purple-500" },
+    wmv: { icon: Video, color: "text-purple-500" },
+    flv: { icon: Video, color: "text-purple-500" },
+    m4v: { icon: Video, color: "text-purple-500" },
+    m4a: { icon: Video, color: "text-purple-500" },
+    m4b: { icon: Video, color: "text-purple-500" },
 
     // Others
     exe: { icon: Settings, color: "text-gray-500" },
@@ -81,6 +102,7 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     db: { icon: Database, color: "text-blue-500" },
     ".env": { icon: Settings, color: "text-gray-500" },
     ".gitignore": { icon: GitBranch, color: "text-gray-500" },
+    ".git": { icon: GitBranch, color: "text-gray-500" },
 
     // Package files
     "package.json": { icon: Package, color: "text-red-500" },
