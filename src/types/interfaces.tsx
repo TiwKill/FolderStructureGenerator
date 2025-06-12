@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react"
 export interface FileItem {
     id: string
     name: string
+    created_by?: string
     type: "file" | "folder"
     children?: FileItem[]
     comment?: string

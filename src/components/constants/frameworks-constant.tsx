@@ -8,4 +8,6 @@ export const frameworks = [
     { name: "Nuxt.js" },
     { name: "Remix" },
     { name: "Astro" },
+    { name: "FastAPI" },
+    { name: "FastAPI by Essonna" },
 ]

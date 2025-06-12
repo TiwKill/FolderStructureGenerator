@@ -154,11 +154,6 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                 {/* Mode Toggle */}
                                 <ModeToggle />
 
-                                {/* Add User button */}
-                                {/* <Button variant="ghost" size="sm" className="gap-2">
-                                    <UserPlus className="w-4 h-4" />
-                                </Button> */}
-
                                 {/* Shortcuts button */}
                                 <Button variant="ghost" size="sm" className="gap-2 hidden md:block" onClick={() => setShowShortcutsDialog(true)}>
                                     <Keyboard className="w-4 h-4" />
@@ -167,6 +162,7 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                 {/* Clear All button */}
                                 <Button
                                     variant="ghost"
+                                    size="sm"
                                     onClick={() => setShowClearDialog(true)}
                                     className="px-3 py-1 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                                 >

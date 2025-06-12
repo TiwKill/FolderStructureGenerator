@@ -101,6 +101,29 @@ export default function FrameworkStructure({
             "Include Astro config": true,
             "Include public folder": true,
         },
+        FastAPI: {
+            "Include app folder": true,
+            "Include api folder": true,
+            "Include models folder": true,
+            "Include schemas folder": true,
+            "Include core folder": true,
+            "Include crud folder": true,
+            "Include db folder": true,
+            "Include tests folder": true,
+            "Include Docker setup": true,
+            "Include alembic migrations": true,
+        },
+        "FastAPI by Essonna": {
+            "Include app folder": true,
+            "Include models folder": true,
+            "Include schemas folder": true,
+            "Include controllers folder": true,
+            "Include utils folder": true,
+            "Include config folder": true,
+            "Include Docker setup": true,
+            "Include requirements.txt": true,
+            "Include .env": true,
+        },
     })
 
     const [isMobile, setIsMobile] = useState(false)
@@ -173,6 +196,10 @@ export default function FrameworkStructure({
                 return applyRemixOptions(customStructure, options)
             case "Astro":
                 return applyAstroOptions(customStructure, options)
+            case "FastAPI":
+                return applyFastAPIOptions(customStructure, options)
+            case "FastAPI by Essonna":
+                return applyFastAPIByEssonnaOptions(customStructure, options)
             default:
                 return customStructure
         }
@@ -529,6 +556,98 @@ export default function FrameworkStructure({
         return structure
     }
 
+    const applyFastAPIOptions = (structure: any, options: { [key: string]: boolean | string }) => {
+        // Handle app folder and its subfolders
+        const appFolder = structure.children?.find((child: any) => child.name === "app")
+        if (appFolder) {
+            if (!options["Include app folder"]) {
+                structure.children = structure.children?.filter((child: any) => child.name !== "app")
+            } else {
+                if (!options["Include api folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "api")
+                }
+                if (!options["Include models folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "models")
+                }
+                if (!options["Include schemas folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "schemas")
+                }
+                if (!options["Include core folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "core")
+                }
+                if (!options["Include crud folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "crud")
+                }
+                if (!options["Include db folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "db")
+                }
+                if (!options["Include tests folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "tests")
+                }
+            }
+        }
+
+        // Handle Docker setup
+        if (!options["Include Docker setup"]) {
+            structure.children = structure.children?.filter(
+                (child: any) => !["Dockerfile", "docker-compose.yml", "entrypoint.sh"].includes(child.name)
+            )
+        }
+
+        // Handle Alembic migrations
+        if (!options["Include alembic migrations"]) {
+            structure.children = structure.children?.filter((child: any) => child.name !== "alembic")
+        }
+
+        return structure
+    }
+
+    const applyFastAPIByEssonnaOptions = (structure: any, options: { [key: string]: boolean | string }) => {
+        // Handle app folder and its subfolders
+        const appFolder = structure.children?.find((child: any) => child.name === "app")
+        if (appFolder) {
+            if (!options["Include app folder"]) {
+                structure.children = structure.children?.filter((child: any) => child.name !== "app")
+            } else {
+                if (!options["Include api folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "routers")
+                }
+                if (!options["Include schemas folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "schemas")
+                }
+                if (!options["Include models folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "models")
+                }
+                if (!options["Include controllers folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "controllers")
+                }
+                if (!options["Include utils folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "utils")
+                }
+                if (!options["Include config folder"]) {
+                    appFolder.children = appFolder.children?.filter((child: any) => child.name !== "config")
+                }
+            }
+        }
+
+        // Handle Docker setup
+        if (!options["Include Docker setup"]) {
+            structure.children = structure.children?.filter(
+                (child: any) => !["Dockerfile", "docker-compose.yml"].includes(child.name)
+            )
+        }
+
+        if (!options["Include requirements.txt"]) {
+            structure.children = structure.children?.filter((child: any) => child.name !== "requirements.txt")
+        }
+
+        if (!options["Include .env"]) {
+            structure.children = structure.children?.filter((child: any) => child.name !== ".env")
+        }
+
+        return structure
+    }
+
     const resetToDefaults = (framework: string) => {
         const defaultOptions = { ...frameworkOptions[framework] }
 
@@ -625,7 +744,7 @@ export default function FrameworkStructure({
                                     disabled={isLoading}
                                 >
                                     <Code className="h-4 w-4" />
-                                    <span className="flex-1">{framework.name}</span>
+                                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{framework.name}</span>
                                     <Settings className="h-4 w-4 text-muted-foreground" />
                                 </DropdownMenuItem>
                             ) : (
@@ -633,7 +752,7 @@ export default function FrameworkStructure({
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger className="cursor-pointer flex items-center gap-2" disabled={isLoading}>
                                         <Code className="h-4 w-4" />
-                                        <span>{framework.name}</span>
+                                        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{framework.name}</span>
                                     </DropdownMenuSubTrigger>
 
                                     <DropdownMenuSubContent className="w-96 max-h-96 overflow-hidden">
