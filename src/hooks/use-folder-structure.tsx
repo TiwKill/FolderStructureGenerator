@@ -237,8 +237,6 @@ export const useFolderStructure = (tabId?: string) => {
         }
     }, [structure])
 
-
-
     // Helper function for clear selection
     const clearSelection = useCallback(() => {
         setSelectedItems([])
