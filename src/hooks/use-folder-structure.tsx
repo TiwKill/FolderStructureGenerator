@@ -15,9 +15,8 @@ import {
 } from "../components/folder-structure/utils"
 import { INITIAL_STRUCTURE } from "@/components/constants/initial-structure-constant"
 import { useHistory } from "./use-history"
-
-const STORAGE_KEY_PREFIX = "project-structure-data-"
-const STORAGE_KEY = 'folder-structure-preview-format'
+import { v4 as uuidv4 } from 'uuid'
+import { STORAGE_KEYS } from "@/components/constants/storage-keys"
 
 // Use Folder Structure Hook
 export const useFolderStructure = (tabId?: string) => {
@@ -55,16 +54,14 @@ export const useFolderStructure = (tabId?: string) => {
 
     // Get storage key for this tab
     const getStorageKey = useCallback(() => {
-        return tabId ? `${STORAGE_KEY_PREFIX}${tabId}` : STORAGE_KEY_PREFIX + "default"
+        return tabId ? `${STORAGE_KEYS.TAB_DATA_PREFIX}${tabId}` : STORAGE_KEYS.TAB_DATA_PREFIX + "default"
     }, [tabId])
 
     // Utility function to generate new IDs recursively
     const generateNewIds = useCallback((item: FileItem): FileItem => {
-        const newId = `${item.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
         const newItem: FileItem = {
             ...item,
-            id: newId,
+            id: uuidv4(),
             children: item.children ? item.children.map((child) => generateNewIds(child)) : undefined,
         }
 
@@ -258,7 +255,7 @@ export const useFolderStructure = (tabId?: string) => {
                         finalName = uniqueName
 
                         const newItem: FileItem = {
-                            id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            id: uuidv4(),
                             name: uniqueName,
                             type,
                             children: type === "folder" ? [] : undefined,
@@ -796,14 +793,14 @@ export const useFolderStructure = (tabId?: string) => {
     const usePreviewFormatDialog = () => {
         const [format, setFormat] = useState<StructurePreviewDialogProps['currentFormat']>(() => {
             if (typeof window !== 'undefined') {
-                const saved = localStorage.getItem(STORAGE_KEY)
+                const saved = localStorage.getItem(STORAGE_KEYS.PREVIEW_FORMAT)
                 return (saved as StructurePreviewDialogProps['currentFormat']) || 'tree'
             }
             return 'tree'
         })
 
         useEffect(() => {
-            localStorage.setItem(STORAGE_KEY, format)
+            localStorage.setItem(STORAGE_KEYS.PREVIEW_FORMAT, format)
         }, [format])
 
         return {

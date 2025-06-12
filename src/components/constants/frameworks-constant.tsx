@@ -1,4 +1,4 @@
-// Make sure framework names match exactly with the generators
+// Frameworks Constant
 export const frameworks = [
     { name: "Next.js" },
     { name: "React" },

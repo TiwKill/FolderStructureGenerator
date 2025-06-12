@@ -9,17 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { PageSkeleton } from "@/components/folder-structure/skeleton-loader"
 import { Input } from "@/components/ui/input"
+import { STORAGE_KEYS } from "@/components/constants/storage-keys"
 
 interface TabStructure {
     id: string
     label: string
     createdAt: number
-}
-
-const STORAGE_KEYS = {
-    TABS: "project-structure-tabs",
-    ACTIVE_TAB: "project-structure-active-tab",
-    TAB_DATA_PREFIX: "project-structure-data-",
 }
 
 export default function Home(): React.JSX.Element {
@@ -52,7 +47,7 @@ export default function Home(): React.JSX.Element {
                     }
                 } else {
                     const defaultTab: TabStructure = {
-                        id: "folder-structure-1",
+                        id: `${Date.now()}`,
                         label: "Folder Structure",
                         createdAt: Date.now(),
                     }
@@ -62,7 +57,7 @@ export default function Home(): React.JSX.Element {
             } catch (error) {
                 console.error("Error loading tabs from localStorage:", error)
                 const defaultTab: TabStructure = {
-                    id: "folder-structure-1",
+                    id: `${Date.now()}`,
                     label: "Project Structure",
                     createdAt: Date.now(),
                 }
@@ -106,7 +101,7 @@ export default function Home(): React.JSX.Element {
     }, [editingTabId])
 
     const addNewTab = () => {
-        const newTabId = `folder-structure-${Date.now()}`
+        const newTabId = `${Date.now()}`
         const newTab: TabStructure = {
             id: newTabId,
             label: `Structure ${tabs.length + 1}`,

@@ -113,10 +113,8 @@ const FolderStructureBuilder = ({ tabId, tabLabel }: FolderStructureBuilderProps
                                         </Avatar>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4 hidden md:block lg:block">
+                                <div className="items-center gap-4 hidden md:block lg:block">
                                     <h2 className="text-lg font-semibold">{tabLabel}</h2>
-                                </div>
-                                <div className="hidden md:block lg:block">
                                     <ProfileCard />
                                 </div>
                             </div>
