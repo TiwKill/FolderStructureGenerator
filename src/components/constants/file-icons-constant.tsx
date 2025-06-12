@@ -9,6 +9,7 @@ import {
     Settings,
     Database,
     Archive,
+    GitBranch,
 } from "lucide-react"
 
 import type { FileIcon } from "@/types/interfaces"
@@ -41,6 +42,23 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     json: { icon: FileJson, color: "text-yellow-600" },
     yaml: { icon: FileJson, color: "text-red-400" },
     yml: { icon: FileJson, color: "text-red-400" },
+    py: { icon: FileCode, color: "text-green-500" },
+    cpp: { icon: FileCode, color: "text-green-500" },
+    c: { icon: FileCode, color: "text-green-500" },
+    java: { icon: FileCode, color: "text-red-500" },
+    kotlin: { icon: FileCode, color: "text-red-500" },
+    swift: { icon: FileCode, color: "text-yellow-500" },
+    go: { icon: FileCode, color: "text-blue-500" },
+    rust: { icon: FileCode, color: "text-red-500" },
+    php: { icon: FileCode, color: "text-purple-500" },
+    ruby: { icon: FileCode, color: "text-red-500" },
+    perl: { icon: FileCode, color: "text-red-500" },
+    scala: { icon: FileCode, color: "text-red-500" },
+    dart: { icon: FileCode, color: "text-blue-500" },
+    cs: { icon: FileCode, color: "text-red-500" },
+    csproj: { icon: FileCode, color: "text-red-500" },
+    cshtml: { icon: FileCode, color: "text-red-500" },
+    csx: { icon: FileCode, color: "text-red-500" },
 
     // Archives
     zip: { icon: Archive, color: "text-yellow-600" },
@@ -61,9 +79,20 @@ export const FILE_ICONS: Record<string, FileIcon> = {
     sh: { icon: Settings, color: "text-gray-500" },
     sql: { icon: Database, color: "text-blue-500" },
     db: { icon: Database, color: "text-blue-500" },
+    ".env": { icon: Settings, color: "text-gray-500" },
+    ".gitignore": { icon: GitBranch, color: "text-gray-500" },
 
     // Package files
     "package.json": { icon: Package, color: "text-red-500" },
     "composer.json": { icon: Package, color: "text-blue-500" },
     "requirements.txt": { icon: Package, color: "text-green-500" },
+    "pyproject.toml": { icon: Package, color: "text-green-500" },
+    "Dockerfile": { icon: Package, color: "text-green-500" },
+    "docker-compose.yml": { icon: Package, color: "text-green-500" },
+    "entrypoint.sh": { icon: Package, color: "text-green-500" },
+    "alembic.ini": { icon: Package, color: "text-green-500" },
+    "alembic": { icon: Package, color: "text-green-500" },
+    "alembic_versions": { icon: Package, color: "text-green-500" },
+    "alembic_env.py": { icon: Package, color: "text-green-500" },
+    "alembic_script.py.mako": { icon: Package, color: "text-green-500" },
 }               
