@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { PageSkeleton } from "@/components/folder-structure/skeleton-loader"
 import { Input } from "@/components/ui/input"
 import { STORAGE_KEYS } from "@/components/constants/storage-keys"
+import Footer from "@/components/footer"
 
 interface TabStructure {
     id: string
@@ -342,10 +343,8 @@ export default function Home(): React.JSX.Element {
                             ))}
                         </Tabs>
                     </TooltipProvider>
-                </div>
-
-                <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                    <p>Tip: Double-click on tab name to rename it, or drag tabs to reorder them</p>
+                    
+                    <Footer />
                 </div>
             </div>
         </main>
